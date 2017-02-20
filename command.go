@@ -84,6 +84,8 @@ func (c *Command) parseFlags() error {
 	}
 
 	c.flagSet = flag.NewFlagSet(c.Name, flag.ContinueOnError)
+	c.flagSet.SetOutput(ioutil.Discard)
+
 	for _, variable := range c.Variables {
 		variable.setFlag(c.flagSet)
 	}

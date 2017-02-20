@@ -35,6 +35,7 @@ func NewApp() *App {
 
 func (a *App) Run(args []string) {
 	a.flagSet = flag.NewFlagSet(a.Name, flag.ContinueOnError)
+	a.flagSet.SetOutput(ioutil.Discard)
 	a.args = args[1:]
 
 	a.checkForConfig()
