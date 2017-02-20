@@ -2,26 +2,65 @@ package cli
 
 import (
 	"flag"
-	"fmt"
+	"io/ioutil"
+	"strings"
 )
 
-type Author struct {
-	Name  string
-	Email string
+type (
+	Author struct {
+		Name  string
+		Email string
+	}
+
+	Command struct {
+		Name            string
+		Usage           string
+		LongDescription string
+		BeforeFunc      func(c *Command) error
+		Subcommands     []*Command
+		Variables       []Variable
+		parentCommand   *Command
+		flagSet         *flag.FlagSet
+		args            []string
+		Action          func()
+		Active          bool
+		expandedName    string
+	}
+
+	activeSetting struct {
+		CommandPath  string      `json:"command_path"`
+		VariableName string      `json:"variable_name"`
+		Value        interface{} `json:"value"`
+		Source       ParsingType `json:"source"`
+	}
+)
+
+// Get the expanded name of a command, which includes the name of the parent commands, separated by a "."
+// ex. main.sub1.sub2
+func (c *Command) GetExpandedName() string {
+	if c.expandedName != "" {
+		return c.expandedName
+	}
+
+	parent := c
+	names := make([]string, 0)
+
+	for parent != nil {
+		names = append(names, parent.Name)
+		parent = parent.parentCommand
+	}
+	reverseStringSlice(names)
+	c.expandedName = strings.Join(names, ".")
+	return c.expandedName
 }
 
-type Command struct {
-	Name            string
-	Usage           string
-	LongDescription string
-	BeforeFunc      func(c *Command) error
-	Subcommands     []*Command
-	Variables       []Variable
-	parentCommand   *Command
-	flagSet         *flag.FlagSet
-	args            []string
-	Action          func()
-	Active          bool
+// Get the set of active commands. All commands in the chain of arguments are considered active.
+func (c *Command) GetActiveCommands() []*Command {
+	var commands []*Command
+	c.loopActiveCommands(func(command *Command) {
+		commands = append(commands, command)
+	})
+	return commands
 }
 
 // Adds the parentCommands to all nested commands.
@@ -79,6 +118,7 @@ func (c *Command) parseFlags() error {
 			}
 		}
 	}
+
 	if c.args == nil {
 		return nil
 	}
@@ -91,10 +131,6 @@ func (c *Command) parseFlags() error {
 	}
 	err := c.flagSet.Parse(c.args[:])
 
-	for _, variable := range c.Variables {
-		val, found := variable.getFlagValue(c.flagSet)
-		fmt.Println(variable.GetName(), val, found)
-	}
 	if err != nil {
 		return err
 	}
@@ -142,3 +178,34 @@ func (c *Command) loopActiveVariables(fn func(*Command, Variable)) {
 	})
 }
 
+func (c *Command) getSetFlags() []activeSetting {
+	var allSettings []activeSetting
+	c.loopActiveVariables(func(command *Command, variable Variable) {
+		expandedName := command.GetExpandedName()
+		if val, set := variable.getFlagValue(command.flagSet); set {
+			allSettings = append(allSettings, activeSetting{
+				CommandPath:  expandedName,
+				VariableName: variable.GetName(),
+				Value:        val,
+				Source:       CliFlags,
+			})
+		}
+	})
+	return allSettings
+}
+
+func (c *Command) parseEnvVars() []activeSetting {
+	var allSettings []activeSetting
+	c.loopActiveVariables(func(command *Command, variable Variable) {
+		expandedName := command.GetExpandedName()
+		if val, set := variable.setEnv(); set {
+			allSettings = append(allSettings, activeSetting{
+				CommandPath:  expandedName,
+				VariableName: variable.GetName(),
+				Value:        val,
+				Source:       EnvironmentVariables,
+			})
+		}
+	})
+	return allSettings
+}
