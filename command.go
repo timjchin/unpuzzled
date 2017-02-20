@@ -98,3 +98,25 @@ func (c *Command) parseFlags() error {
 	}
 	return nil
 }
+
+// Helper function to search down the tree of commands and discover if it's a help command.
+// If it is, return the active command.
+func (c *Command) isHelpCommand(helpMap map[string]bool) (*Command, bool) {
+	for _, arg := range c.args {
+		if helpMap[arg] {
+			return c, true
+		}
+	}
+
+	for _, command := range c.Subcommands {
+		if command.Active == false {
+			continue
+		}
+		if helpCommand, isHelp := command.isHelpCommand(helpMap); isHelp {
+			return helpCommand, true
+		}
+	}
+
+	return nil, false
+}
+

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -13,6 +14,7 @@ type App struct {
 	Copyright       string
 	Command         *Command
 	Authors         []Author
+	HelpCommands    map[string]bool
 	Action          func()
 	ConfigFlag      string
 	flagSet         *flag.FlagSet
@@ -23,6 +25,11 @@ func NewApp() *App {
 	return &App{
 		Name:    "cli",
 		Authors: make([]Author, 0),
+		HelpCommands: map[string]bool{
+			"--help": true,
+			"-h":     true,
+			"help":   true,
+		},
 	}
 }
 
@@ -66,5 +73,9 @@ func (a *App) parseCommands() {
 	}
 	a.Command.buildTree(nil)
 	a.Command.assignArguments(a.args)
-	a.Command.parseFlags()
+
+	if helpCommand, isHelp := a.Command.isHelpCommand(a.HelpCommands); isHelp {
+		fmt.Println("help.", helpCommand.Name)
+		return
+	}
 }
