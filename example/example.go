@@ -16,9 +16,8 @@ func main() {
 	app := cli.NewApp()
 	config := &Config{}
 
-	app.ConfigFlag = "config, c"
 	app.Command = &cli.Command{
-		Name: "Main Command",
+		Name: "main",
 		Variables: []cli.Variable{
 			&cli.StringVariable{
 				Name:        "random-value",
@@ -29,6 +28,12 @@ func main() {
 				Name:        "booltest",
 				Description: "Bool test",
 				Destination: &config.CustomBool,
+			},
+			&cli.ConfigVariable{
+				StringVariable: &cli.StringVariable{
+					Name: "config",
+				},
+				Type: cli.TomlConfig,
 			},
 		},
 		Action: func() {
