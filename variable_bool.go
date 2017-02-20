@@ -6,17 +6,22 @@ import (
 )
 
 type BoolVariable struct {
-	Name            string
-	Description     string
-	Required        bool
-	Default         bool
-	Destination     *bool
+	Name        string
+	Description string
+	Required    bool
+	Default     bool
+	Destination *bool
+
 	flagDestination *bool
 	envName         string
 }
 
 func (b *BoolVariable) GetName() string {
 	return b.Name
+}
+
+func (b *BoolVariable) IsRequired() bool {
+	return b.Required
 }
 
 func (b *BoolVariable) setFlag(flagset *flag.FlagSet) {
@@ -38,8 +43,4 @@ func (b *BoolVariable) setEnv() (interface{}, bool) {
 		return value, true
 	}
 	return nil, false
-}
-
-func (b *BoolVariable) IsRequired() bool {
-	return b.Required
 }
