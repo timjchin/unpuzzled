@@ -6,17 +6,22 @@ import (
 )
 
 type StringVariable struct {
-	Name            string
-	Description     string
-	Default         string
-	Required        bool
-	Destination     *string
+	Name        string
+	Description string
+	Default     string
+	Required    bool
+	Destination *string
+
 	flagDestination *string
 	envName         string
 }
 
 func (s *StringVariable) GetName() string {
 	return s.Name
+}
+
+func (s *StringVariable) IsRequired() bool {
+	return s.Required
 }
 
 func (s *StringVariable) setFlag(flagset *flag.FlagSet) {
@@ -40,8 +45,4 @@ func (s *StringVariable) setEnv() (interface{}, bool) {
 		return value, true
 	}
 	return nil, false
-}
-
-func (s *StringVariable) IsRequired() bool {
-	return s.Required
 }
