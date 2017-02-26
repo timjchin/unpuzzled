@@ -107,3 +107,54 @@ func TestArgumentAssignment(t *testing.T) {
 		})
 	}
 }
+
+type testExpandedName struct {
+	Command       *Command
+	ExpectedNames []string
+	Name          string
+}
+
+func TestGetExpandedName(t *testing.T) {
+	tests := []testExpandedName{
+		testExpandedName{
+			Name: "nested",
+			Command: &Command{
+				Name: "first",
+				Subcommands: []*Command{
+					&Command{
+						Name: "second",
+					},
+					&Command{
+						Name: "third",
+					},
+				},
+			},
+			ExpectedNames: []string{
+				"first",
+				"first.second",
+				"first.third",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			test.Command.buildTree(nil)
+			var names []string
+			loopCommands(test.Command, func(c *Command) {
+				names = append(names, c.GetExpandedName())
+			}, true)
+			assert.Equal(t, test.ExpectedNames, names, "expanded names are not equal.")
+		})
+	}
+}
+
+func loopCommands(command *Command, fn func(*Command), isFirst bool) {
+	if isFirst {
+		fn(command)
+	}
+	for _, subcommand := range command.Subcommands {
+		fn(subcommand)
+		loopCommands(subcommand, fn, false)
+	}
+}

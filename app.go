@@ -96,6 +96,7 @@ func (a *App) parseCommands() {
 	a.Command.parseConfigVars()
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
+
 	finalCommand := a.activeCommands[len(a.activeCommands)-1]
 	finalCommand.Action()
 }
@@ -139,6 +140,8 @@ func (a *App) parseByOrder() *mappedSettings {
 
 func (a *App) applySettingsMap(settingsMap *mappedSettings) {
 	commandMap := a.Command.GetExpandedActiveCommmands()
+	// loop through commands, ensure that the order of settings are constantly applied,
+	// instead of looping through MainMap, which is not a consistent order.
 	for _, command := range a.activeCommands {
 		path := command.GetExpandedName()
 		variableSettingsMap := settingsMap.MainMap[path]
