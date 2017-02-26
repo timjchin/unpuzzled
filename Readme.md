@@ -9,6 +9,26 @@ Unpuzzled gives you and your users a clear explanation of where variables are be
 
 Clarity prevents confusion.
 
+# Features
+* First class importing from:
+    * Environment Variables
+    * JSON files
+    * TOML files
+    * CLI Flags
+* Ability to choose the order of precendece (ex. cli flags > JSON > TOML > ENV)
+* Main Command and Subcommands
+* Defaults to verbose output out of the box. 
+     * Ability to turn it off if desired. 
+* Destination variables 
+* Warnings on overrides 
+
+
+Left to do:
+* Required variables
+* Default values
+* Tests
+* More variable types
+
 Goals
 ===
 - Handles multiple types of configuration files, while making it clear to the end user which values are being chosen.
