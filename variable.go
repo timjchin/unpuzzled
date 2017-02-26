@@ -10,6 +10,7 @@ type Variable interface {
 	GetName() string
 	setFlag(*flag.FlagSet)
 	setEnv() (interface{}, bool)
+	apply(interface{})
 	getFlagValue(*flag.FlagSet) (interface{}, bool)
 	IsRequired() bool
 }

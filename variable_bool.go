@@ -24,6 +24,12 @@ func (b *BoolVariable) IsRequired() bool {
 	return b.Required
 }
 
+func (b *BoolVariable) apply(val interface{}) {
+	if boolVal, ok := val.(bool); ok {
+		*b.Destination = boolVal
+	}
+}
+
 func (b *BoolVariable) setFlag(flagset *flag.FlagSet) {
 	var destination bool
 	b.flagDestination = &destination
