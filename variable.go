@@ -8,6 +8,7 @@ import (
 
 type Variable interface {
 	GetName() string
+	GetDescription() string
 	setFlag(*flag.FlagSet)
 	setEnv() (interface{}, bool)
 	apply(interface{})

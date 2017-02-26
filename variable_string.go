@@ -20,6 +20,10 @@ func (s *StringVariable) GetName() string {
 	return s.Name
 }
 
+func (s *StringVariable) GetDescription() string {
+	return s.Description
+}
+
 func (s *StringVariable) IsRequired() bool {
 	return s.Required
 }
