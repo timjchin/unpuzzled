@@ -2,8 +2,11 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type (
@@ -19,12 +22,14 @@ type (
 		BeforeFunc      func(c *Command) error
 		Subcommands     []*Command
 		Variables       []Variable
-		parentCommand   *Command
-		flagSet         *flag.FlagSet
-		args            []string
 		Action          func()
 		Active          bool
-		expandedName    string
+
+		parentCommand *Command
+		flagSet       *flag.FlagSet
+		args          []string
+		expandedName  string
+		configVars    []*ConfigVariable
 	}
 
 	activeSetting struct {
@@ -32,6 +37,7 @@ type (
 		VariableName string      `json:"variable_name"`
 		Value        interface{} `json:"value"`
 		Source       ParsingType `json:"source"`
+		SettingName  string      `json:"setting_name"`
 	}
 )
 
@@ -61,6 +67,28 @@ func (c *Command) GetActiveCommands() []*Command {
 		commands = append(commands, command)
 	})
 	return commands
+}
+
+func (c *Command) GetExpandedActiveCommmands() map[string]*Command {
+	outMap := make(map[string]*Command)
+	c.loopActiveCommands(func(command *Command) {
+		outMap[command.GetExpandedName()] = command
+	})
+	return outMap
+}
+
+func (c *Command) GetVariableMap() map[string]Variable {
+	outMap := make(map[string]Variable)
+	for _, variable := range c.Variables {
+		if _, exists := outMap[variable.GetName()]; exists {
+			log.WithFields(log.Fields{
+				"variable": variable.GetName(),
+				"command":  c.Name,
+			}).Fatal("Duplciate variables seen with the same name.")
+		}
+		outMap[variable.GetName()] = variable
+	}
+	return outMap
 }
 
 // Adds the parentCommands to all nested commands.
@@ -137,6 +165,38 @@ func (c *Command) parseFlags() error {
 	return nil
 }
 
+// test for config variables, add command state.
+func (c *Command) findConfigVars() {
+	c.loopActiveVariables(func(command *Command, variable Variable) {
+		if config, ok := variable.(*ConfigVariable); ok {
+			command.configVars = append(command.configVars, config)
+		}
+	})
+}
+
+// Helper to get the active config variables by type.
+func (c *Command) getConfigVarsByType(configType ParsingType) []*ConfigVariable {
+	var vars []*ConfigVariable
+	for _, configVar := range c.configVars {
+		if configVar.Type == configType {
+			vars = append(vars, configVar)
+		}
+	}
+	return vars
+}
+
+func (c *Command) parseConfigVars() error {
+	c.loopActiveCommands(func(command *Command) {
+		if len(command.configVars) == 0 {
+			return
+		}
+		for _, config := range command.configVars {
+			config.ParseConfig(c.flagSet)
+		}
+	})
+	return nil
+}
+
 // Helper function to search down the tree of commands and discover if it's a help command.
 // If it is, return the active command.
 func (c *Command) isHelpCommand(helpMap map[string]bool) (*Command, bool) {
@@ -209,6 +269,33 @@ func (c *Command) parseEnvVars() []activeSetting {
 				Value:        val,
 				Source:       EnvironmentVariables,
 			})
+		}
+	})
+	return allSettings
+}
+
+func (c *Command) parseConfigValues(configVars []*ConfigVariable) []activeSetting {
+	var allSettings []activeSetting
+	c.loopActiveVariables(func(command *Command, variable Variable) {
+		expandedName := command.GetExpandedName()
+		for _, configVar := range configVars {
+			currPath := fmt.Sprintf("%s.%s", expandedName, variable.GetName())
+			value, err := configVar.getConfigValue(currPath)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"variable": variable.GetName(),
+					"config":   configVar.GetName(),
+				}).Fatal("Failed while parsing config variable.")
+			}
+			if value != nil {
+				allSettings = append(allSettings, activeSetting{
+					CommandPath:  expandedName,
+					VariableName: variable.GetName(),
+					Value:        value,
+					Source:       TomlConfig,
+					SettingName:  configVar.GetName(),
+				})
+			}
 		}
 	})
 	return allSettings

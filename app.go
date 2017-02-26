@@ -5,8 +5,6 @@ import (
 	"html/template"
 	"os"
 
-	"io/ioutil"
-
 	"reflect"
 
 	"github.com/fatih/color"
@@ -27,6 +25,7 @@ type App struct {
 	ConfigFlag      string
 	RemoveColor     bool
 	args            []string
+	activeCommands  []*Command
 }
 
 type ParsingType int
@@ -92,30 +91,70 @@ func (a *App) parseCommands() {
 		return
 	}
 
-	a.parseByOrder()
+	a.activeCommands = a.Command.GetActiveCommands()
+	a.Command.findConfigVars()
+	a.Command.parseConfigVars()
+	settingsMap := a.parseByOrder()
+	a.applySettingsMap(settingsMap)
+	finalCommand := a.activeCommands[len(a.activeCommands)-1]
+	finalCommand.Action()
 }
 
-func (a *App) parseByOrder() error {
+func (a *App) parseByOrder() *mappedSettings {
 	settingsMap := newMappedSettings()
 
 	for _, order := range a.ParsingOrder {
 		switch order {
 		case EnvironmentVariables:
-			settingsMap.addArray(a.Command.parseEnvVars())
+			settingsMap.addParsedArray(a.Command.parseEnvVars())
 
 		case JsonConfig:
+			vars := a.Command.getConfigVarsByType(JsonConfig)
+			if len(vars) == 0 {
+				continue
+			}
 
 		case YamlConfig:
+			vars := a.Command.getConfigVarsByType(YamlConfig)
+			if len(vars) == 0 {
+				continue
+			}
 
 		case TomlConfig:
+			vars := a.Command.getConfigVarsByType(TomlConfig)
+			if len(vars) == 0 {
+				continue
+			}
+			setValues := a.Command.parseConfigValues(vars)
+			fmt.Println("set values!", setValues)
+			settingsMap.addParsedArray(setValues)
 
 		case CliFlags:
-			settingsMap.addArray(a.Command.getSetFlags())
+			settingsMap.addParsedArray(a.Command.getSetFlags())
 		}
 	}
-	settingsMap.PrintDuplicates(a.Command.GetActiveCommands())
+	settingsMap.PrintDuplicates(a.activeCommands)
 	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
-	return nil
+	return settingsMap
+}
+
+func (a *App) applySettingsMap(settingsMap *mappedSettings) {
+	commandMap := a.Command.GetExpandedActiveCommmands()
+	for _, command := range a.activeCommands {
+		path := command.GetExpandedName()
+		variableSettingsMap := settingsMap.MainMap[path]
+		currCommand := commandMap[path]
+		variableMap := currCommand.GetVariableMap()
+
+		for _, setting := range variableSettingsMap {
+			activeSetting := setting[len(setting)-1]
+			currVariable := variableMap[activeSetting.VariableName]
+			if _, ok := currVariable.(*ConfigVariable); ok {
+				continue
+			}
+			currVariable.apply(activeSetting.Value)
+		}
+	}
 }
 
 type mappedSettings struct {
@@ -128,7 +167,7 @@ func newMappedSettings() *mappedSettings {
 	}
 }
 
-func (m *mappedSettings) addArray(settings []activeSetting) {
+func (m *mappedSettings) addParsedArray(settings []activeSetting) {
 	for _, setting := range settings {
 		if m.MainMap[setting.CommandPath] == nil {
 			m.MainMap[setting.CommandPath] = make(map[string][]activeSetting)
