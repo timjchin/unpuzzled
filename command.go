@@ -69,6 +69,7 @@ func (c *Command) GetActiveCommands() []*Command {
 	return commands
 }
 
+// Helper to get a map of expanded names to the actual command.
 func (c *Command) GetExpandedActiveCommmands() map[string]*Command {
 	outMap := make(map[string]*Command)
 	c.loopActiveCommands(func(command *Command) {
@@ -77,6 +78,7 @@ func (c *Command) GetExpandedActiveCommmands() map[string]*Command {
 	return outMap
 }
 
+// Helper to get a map of variables by variable name.
 func (c *Command) GetVariableMap() map[string]Variable {
 	outMap := make(map[string]Variable)
 	for _, variable := range c.Variables {
