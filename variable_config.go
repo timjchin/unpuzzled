@@ -25,10 +25,6 @@ var (
 	ErrFailedToLoadJson = errors.New("Failed to load json.")
 )
 
-func (c *ConfigVariable) GetName() string {
-	return c.StringVariable.Name
-}
-
 func (c *ConfigVariable) apply(interface{}) {
 	log.Fatal("Config Variable does not apply values.")
 }
