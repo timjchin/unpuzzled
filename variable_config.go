@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml"
@@ -56,7 +55,6 @@ func (c *ConfigVariable) ParseConfig(set *flag.FlagSet) error {
 		c.config = config
 
 		treeMap := tree.ToMap()
-		fmt.Println(treeMap)
 	default:
 		log.Fatal("Unimplemented config")
 

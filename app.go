@@ -126,7 +126,6 @@ func (a *App) parseByOrder() *mappedSettings {
 				continue
 			}
 			setValues := a.Command.parseConfigValues(vars)
-			fmt.Println("set values!", setValues)
 			settingsMap.addParsedArray(setValues)
 
 		case CliFlags:
