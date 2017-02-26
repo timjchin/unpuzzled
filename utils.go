@@ -1,4 +1,4 @@
-package cli
+package unpuzzled
 
 // https://github.com/golang/go/wiki/SliceTricks#reversing
 func reverseStringSlice(a []string) {
