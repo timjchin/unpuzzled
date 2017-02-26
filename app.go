@@ -76,10 +76,6 @@ func (a *App) Run(args []string) {
 	a.checkForConfig()
 	a.parseCommands()
 
-	err := a.flagSet.Parse(a.args)
-	if err != nil {
-		return
-	}
 }
 
 func (a *App) checkForConfig() {
