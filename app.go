@@ -219,9 +219,8 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 		"sourceString": func(setting activeSetting) string {
 			if setting.Source == EnvironmentVariables {
 				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
-			} else if setting.Source == TomlConfig || setting.Source == JsonConfig || setting.Source == YamlConfig {
+			} else if setting.Source == TomlConfig || setting.Source == JsonConfig {
 				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], setting.SettingName)
-
 			} else {
 				return ParingTypeStringMap[setting.Source]
 			}
