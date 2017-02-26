@@ -72,14 +72,7 @@ func NewApp() *App {
 // app.Run(os.Args)
 func (a *App) Run(args []string) {
 	a.args = args[1:]
-
-	a.checkForConfig()
 	a.parseCommands()
-
-}
-
-func (a *App) checkForConfig() {
-
 }
 
 func (a *App) parseCommands() {
