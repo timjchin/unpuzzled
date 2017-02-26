@@ -69,6 +69,9 @@ func NewApp() *App {
 func (a *App) Run(args []string) {
 	a.args = args[1:]
 	a.parseCommands()
+
+	finalCommand := a.activeCommands[len(a.activeCommands)-1]
+	finalCommand.Action()
 }
 
 func (a *App) parseCommands() {
@@ -93,9 +96,6 @@ func (a *App) parseCommands() {
 	a.Command.parseConfigVars()
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
-
-	finalCommand := a.activeCommands[len(a.activeCommands)-1]
-	finalCommand.Action()
 }
 
 func (a *App) parseByOrder() *mappedSettings {
