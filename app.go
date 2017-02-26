@@ -33,7 +33,6 @@ type ParsingType int
 const (
 	EnvironmentVariables ParsingType = iota
 	JsonConfig
-	YamlConfig
 	TomlConfig
 	CliFlags
 )
@@ -41,7 +40,6 @@ const (
 var ParingTypeStringMap = map[ParsingType]string{
 	EnvironmentVariables: "Environment",
 	JsonConfig:           "JSON Config",
-	YamlConfig:           "YAML Config",
 	TomlConfig:           "Toml Config",
 	CliFlags:             "CLI Flag",
 }
@@ -59,7 +57,6 @@ func NewApp() *App {
 		ParsingOrder: []ParsingType{
 			EnvironmentVariables,
 			JsonConfig,
-			YamlConfig,
 			TomlConfig,
 			CliFlags,
 		},
@@ -111,12 +108,6 @@ func (a *App) parseByOrder() *mappedSettings {
 
 		case JsonConfig:
 			vars := a.Command.getConfigVarsByType(JsonConfig)
-			if len(vars) == 0 {
-				continue
-			}
-
-		case YamlConfig:
-			vars := a.Command.getConfigVarsByType(YamlConfig)
 			if len(vars) == 0 {
 				continue
 			}

@@ -5,7 +5,7 @@ Goals
 - Handles multiple types of configuration files, while making it clear to the end user which values are being chosen.
     - This should include:
         - ENV Variables
-        - JSON / YAML / TOML
+        - JSON / TOML
         - CLI flags
     - The order of parsing should be configurable, and clear to the end user.
         - Default order is: CLI > JSON > YAML > TOML > ENV 
