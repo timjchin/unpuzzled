@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"flag"
 	"fmt"
 	"html/template"
 	"os"
@@ -27,7 +26,6 @@ type App struct {
 	Action          func()
 	ConfigFlag      string
 	RemoveColor     bool
-	flagSet         *flag.FlagSet
 	args            []string
 }
 
@@ -73,8 +71,6 @@ func NewApp() *App {
 // app := cli.NewApp()
 // app.Run(os.Args)
 func (a *App) Run(args []string) {
-	a.flagSet = flag.NewFlagSet(a.Name, flag.ContinueOnError)
-	a.flagSet.SetOutput(ioutil.Discard)
 	a.args = args[1:]
 
 	a.checkForConfig()
