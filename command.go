@@ -178,6 +178,8 @@ func (c *Command) loopActiveVariables(fn func(*Command, Variable)) {
 	})
 }
 
+// loop through all active variables (including variables from subcommands),
+// set from CLI flags. Return all the values that have been set.
 func (c *Command) getSetFlags() []activeSetting {
 	var allSettings []activeSetting
 	c.loopActiveVariables(func(command *Command, variable Variable) {
@@ -194,6 +196,8 @@ func (c *Command) getSetFlags() []activeSetting {
 	return allSettings
 }
 
+// loop through all active variables (including variables from subcommands),
+// set from ENV vars. Return all the values that have been set.
 func (c *Command) parseEnvVars() []activeSetting {
 	var allSettings []activeSetting
 	c.loopActiveVariables(func(command *Command, variable Variable) {
