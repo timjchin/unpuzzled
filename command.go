@@ -294,7 +294,7 @@ func (c *Command) parseConfigValues(configVars []*ConfigVariable) []activeSettin
 					CommandPath:  expandedName,
 					VariableName: variable.GetName(),
 					Value:        value,
-					Source:       TomlConfig,
+					Source:       configVar.Type,
 					SettingName:  configVar.GetName(),
 				})
 			}

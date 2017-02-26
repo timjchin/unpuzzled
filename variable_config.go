@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 
+	"github.com/Jeffail/gabs"
 	"github.com/pelletier/go-toml"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,6 +22,7 @@ type configGetter interface {
 
 var (
 	ErrFailedToLoadToml = errors.New("Failed to load toml.")
+	ErrFailedToLoadJson = errors.New("Failed to load json.")
 )
 
 func (c *ConfigVariable) GetName() string {
@@ -44,18 +46,26 @@ func (c *ConfigVariable) ParseConfig(set *flag.FlagSet) error {
 	case TomlConfig:
 		tree, err := toml.Load(string(data))
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Fatal(ErrFailedToLoadToml)
+			log.WithFields(log.Fields{"err": err}).Fatal(ErrFailedToLoadToml)
 			return ErrFailedToLoadToml
 		}
 		config := &tomlConfig{
 			tree: tree,
 		}
 		c.config = config
+	case JsonConfig:
+		container, err := gabs.ParseJSON(data)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Fatal(ErrFailedToLoadJson)
+			return ErrFailedToLoadJson
+		}
+		config := &jsonConfig{
+			container: container,
+		}
+		c.config = config
 
 	default:
-		log.Fatal("Unimplemented config")
+		log.Fatal("Unimplemented config type")
 
 	}
 	return nil
@@ -71,4 +81,12 @@ type tomlConfig struct {
 
 func (t *tomlConfig) GetByVariable(path string) (interface{}, error) {
 	return t.tree.Get(path), nil
+}
+
+type jsonConfig struct {
+	container *gabs.Container
+}
+
+func (j *jsonConfig) GetByVariable(path string) (interface{}, error) {
+	return j.container.Path(path).Data(), nil
 }

@@ -111,6 +111,8 @@ func (a *App) parseByOrder() *mappedSettings {
 			if len(vars) == 0 {
 				continue
 			}
+			setValues := a.Command.parseConfigValues(vars)
+			settingsMap.addParsedArray(setValues)
 
 		case TomlConfig:
 			vars := a.Command.getConfigVarsByType(TomlConfig)
