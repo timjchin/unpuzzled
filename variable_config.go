@@ -54,7 +54,6 @@ func (c *ConfigVariable) ParseConfig(set *flag.FlagSet) error {
 		}
 		c.config = config
 
-		treeMap := tree.ToMap()
 	default:
 		log.Fatal("Unimplemented config")
 
