@@ -223,8 +223,15 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 		"red":   color.RedString,
 		"green": color.GreenString,
 		"bold":  color.New(color.Bold).Sprint,
-		"sourceString": func(p ParsingType) string {
-			return ParingTypeStringMap[p]
+		"sourceString": func(setting activeSetting) string {
+			if setting.Source == EnvironmentVariables {
+				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
+			} else if setting.Source == TomlConfig || setting.Source == JsonConfig || setting.Source == YamlConfig {
+				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], setting.SettingName)
+
+			} else {
+				return ParingTypeStringMap[setting.Source]
+			}
 		},
 		"plus1": func(x int) int {
 			return x + 1
@@ -238,18 +245,20 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 	}
 	t.Funcs(funcMap)
 	t.Parse(`{{ range $command, $variables := . -}}
+-------------------------------------
 {{ blue "Configuration:"}} {{ bold $command }}
-	{{ range $key, $vars := $variables -}}
-	{{ range $k, $var := $vars }}{{ $length := len $vars -}}
-		{{ if eq $length (plus1 $k) -}}
-			{{ green $key }} = {{ green $var.Value }}
-		{{ green "set from" }} {{ sourceString $var.Source -}} 
-		{{ else -}} 
-			{{ red $key }} = {{ red $var.Value }}
-		{{ red "ignored from" }} {{ sourceString $var.Source -}} 
-		{{ end }}
-	{{ end -}}
+{{ range $key, $vars := $variables -}}
+-------------
+{{ range $k, $var := $vars }}{{ $length := len $vars -}}
+	{{ if eq $length (plus1 $k) -}}
+		{{ green $key }} = {{ green $var.Value }}
+	{{ green "set from" }} {{ sourceString $var -}} 
+	{{ else -}} 
+		{{ red $key }} = {{ red $var.Value }}
+	{{ red "ignored from" }} {{ sourceString $var -}} 
 	{{ end }}
+{{ end -}}
+{{ end }}
 {{ end }}`)
 	t.Execute(os.Stdout, m.MainMap)
 }
