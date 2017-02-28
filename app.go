@@ -13,19 +13,19 @@ import (
 )
 
 type App struct {
-	Name            string
-	Usage           string
-	LongDescription string
-	Copyright       string
-	ParsingOrder    []ParsingType
-	Command         *Command
-	Authors         []Author
-	HelpCommands    map[string]bool
-	Action          func()
-	ConfigFlag      string
-	RemoveColor     bool
-	args            []string
-	activeCommands  []*Command
+	Name           string
+	Usage          string
+	Description    string
+	Copyright      string
+	ParsingOrder   []ParsingType
+	Command        *Command
+	Authors        []Author
+	HelpCommands   map[string]bool
+	Action         func()
+	ConfigFlag     string
+	RemoveColor    bool
+	args           []string
+	activeCommands []*Command
 }
 
 type ParsingType int
