@@ -92,7 +92,7 @@ func (a *App) parseCommands() {
 	}
 
 	if err := a.Command.parseFlags(); err != nil {
-		// TODO: Fix me.
+		log.WithFields(log.Fields{"err": err}).Fatal("error parsing flags.")
 		return
 	}
 
