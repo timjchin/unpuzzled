@@ -33,11 +33,13 @@ type (
 	}
 
 	activeSetting struct {
-		CommandPath  string      `json:"command_path"`
-		VariableName string      `json:"variable_name"`
-		Value        interface{} `json:"value"`
-		Source       ParsingType `json:"source"`
-		SettingName  string      `json:"setting_name"`
+		CommandPath          string      `json:"command_path"`
+		VariableName         string      `json:"variable_name"`
+		Value                interface{} `json:"value"`
+		Destination          interface{} `json:"destination"`
+		Source               ParsingType `json:"source"`
+		SettingName          string      `json:"setting_name"`
+		DuplicateDestination bool        `json:"duplicate_destination"`
 	}
 )
 
@@ -268,24 +270,25 @@ func (c *Command) getSetFlags() []*activeSetting {
 
 // loop through all active variables (including variables from subcommands),
 // set from ENV vars. Return all the values that have been set.
-func (c *Command) parseEnvVars() []activeSetting {
-	var allSettings []activeSetting
+func (c *Command) parseEnvVars() []*activeSetting {
+	var allSettings []*activeSetting
 	c.loopActiveVariables(func(command *Command, variable Variable) {
 		expandedName := command.GetExpandedName()
 		if val, set := variable.setEnv(); set {
-			allSettings = append(allSettings, activeSetting{
+			allSettings = append(allSettings, &activeSetting{
 				CommandPath:  expandedName,
 				VariableName: variable.GetName(),
 				Value:        val,
 				Source:       EnvironmentVariables,
+				Destination:  variable.GetDestination(),
 			})
 		}
 	})
 	return allSettings
 }
 
-func (c *Command) parseConfigValues(configVars []*ConfigVariable) []activeSetting {
-	var allSettings []activeSetting
+func (c *Command) parseConfigValues(configVars []*ConfigVariable) []*activeSetting {
+	var allSettings []*activeSetting
 	c.loopActiveVariables(func(command *Command, variable Variable) {
 		expandedName := command.GetExpandedName()
 		for _, configVar := range configVars {
@@ -298,12 +301,13 @@ func (c *Command) parseConfigValues(configVars []*ConfigVariable) []activeSettin
 				}).Fatal("Failed while parsing config variable.")
 			}
 			if value != nil {
-				allSettings = append(allSettings, activeSetting{
+				allSettings = append(allSettings, &activeSetting{
 					CommandPath:  expandedName,
 					VariableName: variable.GetName(),
 					Value:        value,
 					Source:       configVar.Type,
 					SettingName:  configVar.GetName(),
+					Destination:  variable.GetDestination(),
 				})
 			}
 		}

@@ -101,6 +101,7 @@ func (a *App) parseCommands() {
 	a.Command.parseConfigVars()
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
+	settingsMap.checkDuplicatePointers()
 	settingsMap.PrintDuplicates(a.activeCommands)
 	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
 }
@@ -161,25 +162,52 @@ func (a *App) applySettingsMap(settingsMap *mappedSettings) {
 }
 
 type mappedSettings struct {
-	MainMap map[string]map[string][]activeSetting `json:"main_map"`
+	MainMap map[string]map[string][]*activeSetting `json:"main_map"`
 }
 
 func newMappedSettings() *mappedSettings {
 	return &mappedSettings{
-		MainMap: make(map[string]map[string][]activeSetting),
+		MainMap: make(map[string]map[string][]*activeSetting),
 	}
 }
 
-func (m *mappedSettings) addParsedArray(settings []activeSetting) {
+func (m *mappedSettings) addParsedArray(settings []*activeSetting) {
 	for _, setting := range settings {
 		if m.MainMap[setting.CommandPath] == nil {
-			m.MainMap[setting.CommandPath] = make(map[string][]activeSetting)
+			m.MainMap[setting.CommandPath] = make(map[string][]*activeSetting)
 		}
 		if m.MainMap[setting.CommandPath][setting.VariableName] == nil {
-			m.MainMap[setting.CommandPath][setting.VariableName] = make([]activeSetting, 0)
+			m.MainMap[setting.CommandPath][setting.VariableName] = make([]*activeSetting, 0)
 		}
 		m.MainMap[setting.CommandPath][setting.VariableName] = append(m.MainMap[setting.CommandPath][setting.VariableName], setting)
 	}
+}
+
+func (m *mappedSettings) checkDuplicatePointers() {
+	pointerMap := make(map[interface{}][]*activeSetting)
+	for _, commandName := range m.MainMap {
+		for _, settings := range commandName {
+			for _, setting := range settings {
+				if pointerMap[setting.Destination] == nil {
+					pointerMap[setting.Destination] = make([]*activeSetting, 0)
+				}
+				pointerMap[setting.Destination] = append(pointerMap[setting.Destination], setting)
+			}
+		}
+	}
+	for _, settings := range pointerMap {
+		settingsLen := len(settings)
+		if settingsLen < 2 {
+			continue
+		}
+		for i, setting := range settings {
+			if i != settingsLen-1 {
+				setting.DuplicateDestination = true
+			}
+
+		}
+	}
+
 }
 
 // Helper to print duplciates in table format to Stdout.
