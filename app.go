@@ -101,10 +101,15 @@ func (a *App) parseCommands() {
 	a.Command.parseConfigVars()
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
+	settingsMap.PrintDuplicates(a.activeCommands)
+	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
 }
 
 func (a *App) parseByOrder() *mappedSettings {
 	settingsMap := newMappedSettings()
+	if a.ParsingOrder == nil {
+		log.Fatal("No parsing order! Use unpuzzled.NewApp when creating an application.")
+	}
 
 	for _, order := range a.ParsingOrder {
 		switch order {
@@ -131,8 +136,6 @@ func (a *App) parseByOrder() *mappedSettings {
 			settingsMap.addParsedArray(a.Command.getSetFlags())
 		}
 	}
-	settingsMap.PrintDuplicates(a.activeCommands)
-	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
 	return settingsMap
 }
 
