@@ -223,16 +223,18 @@ func (m *mappedSettings) PrintDuplicates(commands []*Command) {
 			length := len(settings)
 			for i, setting := range settings {
 				var status string
-				if i == length-1 {
-					status = "✔ Used"
-				} else {
+				if setting.DuplicateDestination {
+					status = "x Overwritten Destination"
+				} else if i != length-1 {
 					status = "x Ignored"
+				} else {
+					status = "✔ Used"
 				}
 				row := []string{
 					expandedName,
 					setting.VariableName,
 					ParingTypeStringMap[setting.Source],
-					fmt.Sprintf("%s", setting.Value),
+					fmt.Sprintf("%v", setting.Value),
 					reflect.TypeOf(setting.Value).String(),
 					status,
 				}
@@ -254,7 +256,7 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 		"red":   color.RedString,
 		"green": color.GreenString,
 		"bold":  color.New(color.Bold).Sprint,
-		"sourceString": func(setting activeSetting) string {
+		"sourceString": func(setting *activeSetting) string {
 			if setting.Source == EnvironmentVariables {
 				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
 			} else if setting.Source == TomlConfig || setting.Source == JsonConfig {
@@ -265,6 +267,9 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 		},
 		"plus1": func(x int) int {
 			return x + 1
+		},
+		"stringify": func(x interface{}) string {
+			return fmt.Sprintf("%v", x)
 		},
 	}
 	if noColor {
@@ -280,11 +285,14 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 {{ range $key, $vars := $variables -}}
 -------------
 {{ range $k, $var := $vars }}{{ $length := len $vars -}}
-	{{ if eq $length (plus1 $k) -}}
-		{{ green $key }} = {{ green $var.Value }}
+    {{ if $var.DuplicateDestination -}}
+		{{ red $key }} = {{ red (stringify $var.Value) }}
+	{{ red "ignored" }} {{ sourceString $var -}} {{ red " from overwritten pointer." }}
+	{{ else if eq $length (plus1 $k) -}}
+		{{ green $key }} = {{ green (stringify $var.Value) }}
 	{{ green "set from" }} {{ sourceString $var -}} 
 	{{ else -}} 
-		{{ red $key }} = {{ red $var.Value }}
+		{{ red $key }} = {{ red (stringify $var.Value) }}
 	{{ red "ignored from" }} {{ sourceString $var -}} 
 	{{ end }}
 {{ end -}}
