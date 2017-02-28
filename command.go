@@ -242,18 +242,26 @@ func (c *Command) loopActiveVariables(fn func(*Command, Variable)) {
 
 // loop through all active variables (including variables from subcommands),
 // set from CLI flags. Return all the values that have been set.
-func (c *Command) getSetFlags() []activeSetting {
-	var allSettings []activeSetting
-	c.loopActiveVariables(func(command *Command, variable Variable) {
+func (c *Command) getSetFlags() []*activeSetting {
+	var allSettings []*activeSetting
+	c.loopActiveCommands(func(command *Command) {
 		expandedName := command.GetExpandedName()
-		if val, set := variable.getFlagValue(command.flagSet); set {
-			allSettings = append(allSettings, activeSetting{
-				CommandPath:  expandedName,
-				VariableName: variable.GetName(),
-				Value:        val,
-				Source:       CliFlags,
-			})
-		}
+		varMap := command.GetVariableMap()
+
+		command.flagSet.Visit(func(f *flag.Flag) {
+			if variable, ok := varMap[f.Name]; ok {
+				if val, set := variable.getFlagValue(command.flagSet); set {
+					allSettings = append(allSettings, &activeSetting{
+						CommandPath:  expandedName,
+						VariableName: variable.GetName(),
+						Value:        val,
+						Source:       CliFlags,
+						Destination:  variable.GetDestination(),
+					})
+				}
+			}
+		})
+
 	})
 	return allSettings
 }
