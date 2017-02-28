@@ -74,7 +74,9 @@ func (a *App) Run(args []string) {
 	a.parseCommands()
 
 	finalCommand := a.activeCommands[len(a.activeCommands)-1]
-	finalCommand.Action()
+	if finalCommand.Action != nil {
+		finalCommand.Action()
+	}
 }
 
 func (a *App) parseCommands() {
