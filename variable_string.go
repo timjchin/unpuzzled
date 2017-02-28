@@ -24,6 +24,10 @@ func (s *StringVariable) GetDescription() string {
 	return s.Description
 }
 
+func (s *StringVariable) GetDestination() interface{} {
+	return s.Destination
+}
+
 func (s *StringVariable) IsRequired() bool {
 	return s.Required
 }
