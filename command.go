@@ -224,12 +224,15 @@ func (c *Command) isHelpCommand(helpMap map[string]bool) (*Command, bool) {
 
 // Helper to loop through all active commands.
 func (c *Command) loopActiveCommands(fn func(*Command)) {
-	fn(c)
+	if c.parentCommand == nil {
+		fn(c)
+	}
 	for _, command := range c.Subcommands {
 		if !command.Active {
 			continue
 		}
 		fn(command)
+		command.loopActiveCommands(fn)
 	}
 }
 
