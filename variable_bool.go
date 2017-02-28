@@ -3,6 +3,9 @@ package unpuzzled
 import (
 	"flag"
 	"os"
+	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type BoolVariable struct {
