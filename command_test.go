@@ -3,6 +3,8 @@ package unpuzzled
 import (
 	"testing"
 
+	"os"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -156,5 +158,168 @@ func loopCommands(command *Command, fn func(*Command), isFirst bool) {
 	for _, subcommand := range command.Subcommands {
 		fn(subcommand)
 		loopCommands(subcommand, fn, false)
+	}
+}
+
+type testEnvironmentVariables struct {
+	Name      string
+	Command   *Command
+	StrValue  string
+	BoolValue bool
+	EnvVars   []envVar
+}
+type envVar struct {
+	Key   string
+	Value string
+}
+
+func TestEnvironmentVariables(t *testing.T) {
+	var testString string
+	var testBool bool
+
+	tests := []testEnvironmentVariables{
+		testEnvironmentVariables{
+			Name: "strings and bools",
+			Command: &Command{
+				Name: "envTest",
+				Variables: []Variable{
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+					},
+				},
+			},
+			StrValue:  "a",
+			BoolValue: true,
+			EnvVars: []envVar{
+				envVar{"TEST_VALUE", "a"},
+				envVar{"TEST_BOOL", "true"},
+			},
+		},
+		testEnvironmentVariables{
+			Name: "ensure false bools",
+			Command: &Command{
+				Name: "envTest",
+				Variables: []Variable{
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+					},
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+					},
+				},
+			},
+			BoolValue: false,
+			StrValue:  "b",
+			EnvVars: []envVar{
+				envVar{"TEST_VALUE", "b"},
+				envVar{"TEST_BOOL", "false"},
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			for _, envVar := range test.EnvVars {
+				os.Setenv(envVar.Key, envVar.Value)
+			}
+
+			app := NewApp()
+			app.Command = test.Command
+			app.args = []string{}
+			app.parseCommands()
+
+			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
+			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
+
+			for _, envVar := range test.EnvVars {
+				assert.NoError(t, os.Unsetenv(envVar.Key), "Should not error while unsetting the env var.")
+			}
+		})
+	}
+}
+
+type testCLIFlags struct {
+	Name      string
+	Command   *Command
+	StrValue  string
+	BoolValue bool
+	Args      []string
+}
+
+func TestCLIFlags(t *testing.T) {
+	var testString string
+	var testBool bool
+
+	tests := []testCLIFlags{
+		testCLIFlags{
+			Name: "basic",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+					},
+				},
+			},
+			StrValue:  "random",
+			BoolValue: true,
+			Args:      []string{"path_to_exec", "--test-value=random", "--test-bool=true"},
+		},
+		testCLIFlags{
+			Name: "subommand",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+					},
+				},
+				Subcommands: []*Command{
+					&Command{
+						Name: "nested",
+						Variables: []Variable{
+							&StringVariable{
+								Name:        "test-value",
+								Destination: &testString,
+							},
+							&BoolVariable{
+								Name:        "test-bool",
+								Destination: &testBool,
+							},
+						},
+					},
+				},
+			},
+			StrValue:  "used",
+			BoolValue: true,
+			Args:      []string{"path_to_exec", "--test-value=ignored", "--test-bool=true", "nested", "--test-value=used"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.Run(test.Args)
+
+			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
+			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
+		})
 	}
 }
