@@ -45,16 +45,22 @@ func (b *BoolVariable) setFlag(flagset *flag.FlagSet) {
 }
 
 func (b *BoolVariable) getFlagValue(set *flag.FlagSet) (interface{}, bool) {
-	if *b.Destination {
-		return true, true
-	}
-	return false, false
+	return *b.flagDestination, true
 }
 
 func (b *BoolVariable) setEnv() (interface{}, bool) {
 	b.envName = convertNameToOS(b.Name)
 	if value, found := os.LookupEnv(b.envName); found {
-		return value, true
+		boolValue, err := strconv.ParseBool(value)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"envName":   b.envName,
+				"boolValue": boolValue,
+				"err":       err,
+				"name":      b.Name,
+			}).Fatal("Failed to parse bool variable.")
+		}
+		return boolValue, true
 	}
 	return nil, false
 }
