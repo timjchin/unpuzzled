@@ -67,6 +67,9 @@ func NewApp() *App {
 // app := cli.NewApp()
 // app.Run(os.Args)
 func (a *App) Run(args []string) {
+	if len(args) < 1 {
+		log.Fatal("Arguments must be at least 1, please run with app.Run(os.Args).")
+	}
 	a.args = args[1:]
 	a.parseCommands()
 
