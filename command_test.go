@@ -116,6 +116,8 @@ type testExpandedName struct {
 	Name          string
 }
 
+// Internally used to bring commands / subcommands into a single namespace.
+// Test to make sure these names are properly generated, should be chained together with "."'s.
 func TestGetExpandedName(t *testing.T) {
 	tests := []testExpandedName{
 		testExpandedName{
@@ -135,6 +137,27 @@ func TestGetExpandedName(t *testing.T) {
 				"first",
 				"first.second",
 				"first.third",
+			},
+		},
+		testExpandedName{
+			Name: "nested",
+			Command: &Command{
+				Name: "first",
+				Subcommands: []*Command{
+					&Command{
+						Name: "second",
+						Subcommands: []*Command{
+							&Command{
+								Name: "third",
+							},
+						},
+					},
+				},
+			},
+			ExpectedNames: []string{
+				"first",
+				"first.second",
+				"first.second.third",
 			},
 		},
 	}
