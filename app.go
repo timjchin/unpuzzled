@@ -26,6 +26,7 @@ type App struct {
 	missingRequiredVariables map[string][]Variable
 	settingsMap              *mappedSettings
 	HelpTextVariablesInTable bool
+	OverridesOutputInTable   bool
 }
 
 type ParsingType int
@@ -131,8 +132,11 @@ func (a *App) checkRequiredVariables() {
 }
 
 func (a *App) printOverrides() {
-	a.settingsMap.PrintDuplicates(a.activeCommands)
-	a.settingsMap.PrintDuplicatesStdout(a.RemoveColor)
+	if a.OverridesOutputInTable {
+		a.settingsMap.PrintDuplicates(a.activeCommands)
+	} else {
+		a.settingsMap.PrintDuplicatesStdout(a.RemoveColor)
+	}
 }
 
 func (a *App) PrintMissingRequiredVariables() {
