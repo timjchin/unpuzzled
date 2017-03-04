@@ -18,14 +18,18 @@ Clarity prevents confusion.
 * Ability to choose the order of precendece (ex. cli flags > JSON > TOML > ENV)
 * Main Command and Subcommands
 * Defaults to verbose output out of the box. 
-     * Ability to turn it off if desired. 
-* Destination variables 
+     * Ability to turn it off.
+* Destination variables
 * Warnings on overrides 
-
+    * Warnings on overrides by order of precedence. 
+        * If a variable is set as an ENV variable, and a CLI flag overwrites it, let the user know.
+        * If two or more variables have references to the same pointer, let the user know.
+* Displays what variables are set, and what they are set to.
+* Add default values for variables.
 
 Left to do:
 * Required variables
-* Default values
+* Help text
 * Tests
 * More variable types
 
