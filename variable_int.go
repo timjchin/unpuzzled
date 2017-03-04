@@ -82,7 +82,7 @@ func (i *IntVariable) setEnv(value string, envName string) (interface{}, bool) {
 			"err":      err,
 			"envValue": value,
 			"name":     i.Name,
-		}).Fatal("Failed to parse float from environment.")
+		}).Fatal("Failed to parse from environment.")
 	}
 	return int(int64val), true
 }
