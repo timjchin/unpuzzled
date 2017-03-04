@@ -26,6 +26,7 @@ type App struct {
 	RemoveColor    bool
 	args           []string
 	activeCommands []*Command
+	settingsMap    *mappedSettings
 }
 
 type ParsingType int
@@ -72,6 +73,7 @@ func (a *App) Run(args []string) {
 	}
 	a.args = args[1:]
 	a.parseCommands()
+	a.printOverrides()
 
 	finalCommand := a.activeCommands[len(a.activeCommands)-1]
 	if finalCommand.Action != nil {
@@ -102,8 +104,12 @@ func (a *App) parseCommands() {
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
 	settingsMap.checkDuplicatePointers()
-	settingsMap.PrintDuplicates(a.activeCommands)
-	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
+	a.settingsMap = settingsMap
+}
+
+func (a *App) printOverrides() {
+	a.settingsMap.PrintDuplicates(a.activeCommands)
+	a.settingsMap.PrintDuplicatesStdout(a.RemoveColor)
 }
 
 // use the set Parsing order to apply the variables in place, adding it to the settings map.

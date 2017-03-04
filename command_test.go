@@ -346,3 +346,82 @@ func TestCLIFlags(t *testing.T) {
 		})
 	}
 }
+
+type testLoopActiveCommands struct {
+	Name     string
+	Command  *Command
+	Args     []string
+	Expected string
+}
+
+// based on the arguments given, test that the loop function actually calls
+// all the active commands, and not the nonactive ones.
+func TestLoopActiveCommands(t *testing.T) {
+	tests := []testLoopActiveCommands{
+		testLoopActiveCommands{
+			Name: "Single nested",
+			Command: &Command{
+				Name: "basic",
+				Subcommands: []*Command{
+					&Command{
+						Name: "a",
+					},
+					&Command{
+						Name: "b",
+					},
+					&Command{
+						Name: "c",
+					},
+				},
+			},
+			Args:     []string{"basic", "a"},
+			Expected: "basic.a.",
+		},
+		testLoopActiveCommands{
+			Name: "Single nested",
+			Command: &Command{
+				Name: "basic",
+				Subcommands: []*Command{
+					&Command{
+						Name: "a",
+						Subcommands: []*Command{
+							&Command{
+								Name: "a",
+								Subcommands: []*Command{
+									&Command{
+										Name: "a",
+									},
+									&Command{
+										Name: "b",
+									},
+								},
+							},
+							&Command{
+								Name: "b",
+							},
+						},
+					},
+					&Command{
+						Name: "b",
+					},
+				},
+			},
+			Args:     []string{"basic", "a", "a", "a"},
+			Expected: "basic.a.a.a.",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.args = test.Args
+			app.parseCommands()
+			outString := ""
+			app.Command.loopActiveCommands(func(c *Command) {
+				outString += c.Name + "."
+			})
+			assert.Equal(t, test.Expected, outString, "Active command loop names should be equal.")
+		})
+	}
+}
