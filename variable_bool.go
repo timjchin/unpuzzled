@@ -65,11 +65,11 @@ func (b *BoolVariable) setEnv(value string, envName string) (interface{}, bool) 
 	boolValue, err := strconv.ParseBool(value)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"envName":   envName,
-			"boolValue": boolValue,
-			"err":       err,
-			"name":      b.Name,
-		}).Fatal("Failed to parse bool variable.")
+			"envName":  envName,
+			"envValue": value,
+			"err":      err,
+			"name":     b.Name,
+		}).Fatal("Failed to parse bool value from environment.")
 	}
 	return boolValue, true
 }
