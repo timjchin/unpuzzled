@@ -18,7 +18,8 @@ func main() {
 	config := &Config{}
 
 	app.Command = &unpuzzled.Command{
-		Name: "main",
+		Name:  "main",
+		Usage: "An example application that prints values.",
 		Variables: []unpuzzled.Variable{
 			&unpuzzled.StringVariable{
 				Name:        "random-value",
@@ -29,10 +30,13 @@ func main() {
 				Name:        "booltest",
 				Description: "Bool test",
 				Destination: &config.CustomBool,
+				Required:    true,
 			},
 			&unpuzzled.ConfigVariable{
 				StringVariable: &unpuzzled.StringVariable{
-					Name: "config",
+					Required:    true,
+					Name:        "config",
+					Description: "Main configuration",
 				},
 				Type: unpuzzled.JsonConfig,
 			},
@@ -42,7 +46,8 @@ func main() {
 		},
 		Subcommands: []*unpuzzled.Command{
 			&unpuzzled.Command{
-				Name: "server",
+				Name:  "server",
+				Usage: "Run a server",
 				Variables: []unpuzzled.Variable{
 					&unpuzzled.StringVariable{
 						Name:        "random-value",
