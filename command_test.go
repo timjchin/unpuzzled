@@ -378,7 +378,7 @@ func TestLoopActiveCommands(t *testing.T) {
 			Expected: "basic.a.",
 		},
 		testLoopActiveCommands{
-			Name: "Single nested",
+			Name: "Multi nested",
 			Command: &Command{
 				Name: "basic",
 				Subcommands: []*Command{
