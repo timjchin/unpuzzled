@@ -425,3 +425,71 @@ func TestLoopActiveCommands(t *testing.T) {
 		})
 	}
 }
+
+type testDefaultValues struct {
+	Name           string
+	Command        *Command
+	Args           []string
+	ExpectedString string
+	ExpectedBool   bool
+}
+
+func TestDefaultValues(t *testing.T) {
+	var testString string
+	var testBool bool
+	tests := []testDefaultValues{
+		testDefaultValues{
+			Name: "Basic default test.",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+						Default:     "default-value",
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+						Default:     true,
+					},
+				},
+			},
+			Args:           []string{},
+			ExpectedBool:   true,
+			ExpectedString: "default-value",
+		},
+		testDefaultValues{
+			Name: "Ensure defaults are overridden.",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&StringVariable{
+						Name:        "test-value",
+						Destination: &testString,
+						Default:     "default-value",
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Destination: &testBool,
+						Default:     true,
+					},
+				},
+			},
+			Args:           []string{"--test-value=flag-value", "--test-bool=false"},
+			ExpectedBool:   false,
+			ExpectedString: "flag-value",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.args = test.Args
+			app.parseCommands()
+			app.printOverrides()
+			assert.Equal(t, test.ExpectedString, testString, "Default value for string must be equal.")
+			assert.Equal(t, test.ExpectedBool, testBool, "Default value for string must be equal.")
+		})
+	}
+}
