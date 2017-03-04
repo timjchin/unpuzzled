@@ -106,6 +106,8 @@ func (a *App) parseCommands() {
 	settingsMap.PrintDuplicatesStdout(a.RemoveColor)
 }
 
+// use the set Parsing order to apply the variables in place, adding it to the settings map.
+// The last entries in the settingsMap are the selected variables.
 func (a *App) parseByOrder() *mappedSettings {
 	settingsMap := newMappedSettings()
 	if a.ParsingOrder == nil {
@@ -153,6 +155,7 @@ func (a *App) applySettingsMap(settingsMap *mappedSettings) {
 		for _, setting := range variableSettingsMap {
 			activeSetting := setting[len(setting)-1]
 			currVariable := variableMap[activeSetting.VariableName]
+			// special case, ignore a config variable.
 			if _, ok := currVariable.(*ConfigVariable); ok {
 				continue
 			}
@@ -184,6 +187,7 @@ func (m *mappedSettings) addParsedArray(settings []*activeSetting) {
 }
 
 func (m *mappedSettings) checkDuplicatePointers() {
+	// generate the map of pointers.
 	pointerMap := make(map[interface{}][]*activeSetting)
 	for _, commandName := range m.MainMap {
 		for _, settings := range commandName {
@@ -195,6 +199,8 @@ func (m *mappedSettings) checkDuplicatePointers() {
 			}
 		}
 	}
+
+	// if more than 1 entry exists in the []*activeSetting for one pointer, it's a duplicate, and will be overwritten.
 	for _, settings := range pointerMap {
 		settingsLen := len(settings)
 		if settingsLen < 2 {
@@ -204,10 +210,8 @@ func (m *mappedSettings) checkDuplicatePointers() {
 			if i != settingsLen-1 {
 				setting.DuplicateDestination = true
 			}
-
 		}
 	}
-
 }
 
 // Helper to print duplciates in table format to Stdout.
