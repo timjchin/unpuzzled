@@ -26,9 +26,11 @@ Clarity prevents confusion.
         * If two or more variables have references to the same pointer, let the user know.
 * Displays what variables are set, and what they are set to.
 * Add default values for variables.
+* Ability to set Variables as Required.
+    * If a value isn't set, print a warning to stdout, and exit.
+    * If a variable has a `Default` value, it can never be marked as required, because a valid value will be set.
 
 Left to do:
-* Required variables
 * Help text
 * Tests
 * More variable types
