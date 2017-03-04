@@ -21,8 +21,9 @@ type configGetter interface {
 }
 
 var (
-	ErrFailedToLoadToml = errors.New("Failed to load toml.")
-	ErrFailedToLoadJson = errors.New("Failed to load json.")
+	ErrFailedToLoadToml  = errors.New("Failed to load toml.")
+	ErrFailedToLoadJson  = errors.New("Failed to load json.")
+	ErrConfigValueNotSet = errors.New("Config variable is not set.")
 )
 
 func (c *ConfigVariable) apply(interface{}) {
@@ -32,6 +33,9 @@ func (c *ConfigVariable) apply(interface{}) {
 func (c *ConfigVariable) ParseConfig(set *flag.FlagSet) error {
 	// ignore error, library should handle this.
 	stringPointer, _ := c.StringVariable.getFlagValue(set)
+	if stringPointer == nil {
+		return ErrConfigValueNotSet
+	}
 	value := stringPointer.(string)
 	data, err := ioutil.ReadFile(value)
 	if err != nil {
@@ -68,7 +72,10 @@ func (c *ConfigVariable) ParseConfig(set *flag.FlagSet) error {
 }
 
 func (c *ConfigVariable) getConfigValue(path string) (interface{}, error) {
-	return c.config.GetByVariable(path)
+	if c.config != nil {
+		return c.config.GetByVariable(path)
+	}
+	return nil, nil
 }
 
 type tomlConfig struct {
