@@ -1,9 +1,7 @@
 # Unpuzzled
 A user-first CLI library. 
 
-Many CLI tools support importing variables from different sources: command line flags, environment variables, and configuration variables. 
-
-When your application is being used, it's often not clear what values are set, or why.
+With the ability to import variables from many different sources: command line flags, environment variables, and configuration variables, it's often not clear what values are set, or why.
 
 Unpuzzled gives you and your users a clear explanation of where variables are being set, and which ones are being overwritten.
 
