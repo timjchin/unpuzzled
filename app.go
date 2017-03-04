@@ -13,20 +13,21 @@ import (
 )
 
 type App struct {
-	Name           string
-	Usage          string
-	Description    string
-	Copyright      string
-	ParsingOrder   []ParsingType
-	Command        *Command
-	Authors        []Author
-	HelpCommands   map[string]bool
-	Action         func()
-	ConfigFlag     string
-	RemoveColor    bool
-	args           []string
-	activeCommands []*Command
-	settingsMap    *mappedSettings
+	Name                     string
+	Usage                    string
+	Description              string
+	Copyright                string
+	ParsingOrder             []ParsingType
+	Command                  *Command
+	Authors                  []Author
+	HelpCommands             map[string]bool
+	Action                   func()
+	ConfigFlag               string
+	RemoveColor              bool
+	args                     []string
+	activeCommands           []*Command
+	missingRequiredVariables map[string][]Variable
+	settingsMap              *mappedSettings
 }
 
 type ParsingType int
@@ -75,6 +76,10 @@ func (a *App) Run(args []string) {
 	}
 	a.args = args[1:]
 	a.parseCommands()
+	if a.checkRequiredVariables(); a.missingRequiredVariables != nil {
+		a.PrintMissingRequiredVariables()
+		os.Exit(1)
+	}
 	a.printOverrides()
 
 	finalCommand := a.activeCommands[len(a.activeCommands)-1]
@@ -109,9 +114,46 @@ func (a *App) parseCommands() {
 	a.settingsMap.checkDuplicatePointers()
 }
 
+func (a *App) checkRequiredVariables() {
+	missingRequiredVariables := make(map[string][]Variable)
+	a.Command.loopActiveVariables(func(c *Command, variable Variable) {
+		path := c.GetExpandedName()
+		variableSettingsMap := a.settingsMap.MainMap[path]
+		if variable.IsRequired() && len(variableSettingsMap[variable.GetName()]) == 0 {
+			if missingRequiredVariables[path] == nil {
+				missingRequiredVariables[path] = make([]Variable, 0)
+			}
+			missingRequiredVariables[path] = append(missingRequiredVariables[path], variable)
+		}
+	})
+	if len(missingRequiredVariables) > 0 {
+		a.missingRequiredVariables = missingRequiredVariables
+	}
+}
+
 func (a *App) printOverrides() {
 	a.settingsMap.PrintDuplicates(a.activeCommands)
 	a.settingsMap.PrintDuplicatesStdout(a.RemoveColor)
+}
+
+func (a *App) PrintMissingRequiredVariables() {
+	if a.missingRequiredVariables == nil {
+		panic("There are no missing required variables.")
+	}
+	t := template.New("required-variables")
+	funcMap := getColorFuncMap(a.RemoveColor)
+	t.Funcs(funcMap)
+	t.Parse(`---------------------------
+{{ bold (red "Missing Required Variables:") }}
+---------------------------
+{{ range $k, $variables := . }}
+{{ blue "Command" }} : {{ $k }}
+{{ range $i, $var := $variables -}}
+{{ green $var.GetName }} : {{ printf "%v" $var.Description }}
+{{ end -}}
+{{ end }}
+`)
+	t.Execute(os.Stdout, a.missingRequiredVariables)
 }
 
 // use the set Parsing order to apply the variables in place, adding it to the settings map.
@@ -268,33 +310,26 @@ func (m *mappedSettings) PrintDuplicates(commands []*Command) {
 // Use a custom formatted string to print duplicates on Stdout.
 func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 	t := template.New("duplicates")
-	funcMap := template.FuncMap{
-		"blue":  color.BlueString,
-		"red":   color.RedString,
-		"green": color.GreenString,
-		"bold":  color.New(color.Bold).Sprint,
-		"sourceString": func(setting *activeSetting) string {
-			if setting.Source == EnvironmentVariables {
-				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
-			} else if setting.Source == TomlConfig || setting.Source == JsonConfig {
-				return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], setting.SettingName)
-			} else {
-				return ParingTypeStringMap[setting.Source]
-			}
-		},
-		"plus1": func(x int) int {
-			return x + 1
-		},
-		"stringify": func(x interface{}) string {
-			return fmt.Sprintf("%v", x)
-		},
+	funcMap := getColorFuncMap(noColor)
+
+	funcMap["sourceString"] = func(setting *activeSetting) string {
+		if setting.Source == EnvironmentVariables {
+			return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
+		} else if setting.Source == TomlConfig || setting.Source == JsonConfig {
+			return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], setting.SettingName)
+		} else {
+			return ParingTypeStringMap[setting.Source]
+		}
 	}
-	if noColor {
-		funcMap["blue"] = identityString
-		funcMap["red"] = identityString
-		funcMap["green"] = identityString
-		funcMap["bold"] = identityString
+
+	funcMap["plus1"] = func(x int) int {
+		return x + 1
 	}
+
+	funcMap["stringify"] = func(x interface{}) string {
+		return fmt.Sprintf("%v", x)
+	}
+
 	t.Funcs(funcMap)
 	t.Parse(`{{ range $command, $variables := . -}}
 -------------------------------------
@@ -316,6 +351,22 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 {{ end }}
 {{ end }}`)
 	t.Execute(os.Stdout, m.MainMap)
+}
+
+func getColorFuncMap(noColor bool) template.FuncMap {
+	funcMap := template.FuncMap{
+		"blue":  color.BlueString,
+		"red":   color.RedString,
+		"green": color.GreenString,
+		"bold":  color.New(color.Bold).Sprint,
+	}
+	if noColor {
+		funcMap["blue"] = identityString
+		funcMap["red"] = identityString
+		funcMap["green"] = identityString
+		funcMap["bold"] = identityString
+	}
+	return funcMap
 }
 
 func identityString(s string) string {
