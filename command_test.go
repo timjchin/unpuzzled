@@ -1,6 +1,7 @@
 package unpuzzled
 
 import (
+	"fmt"
 	"testing"
 
 	"os"
@@ -185,11 +186,12 @@ func loopCommands(command *Command, fn func(*Command), isFirst bool) {
 }
 
 type testEnvironmentVariables struct {
-	Name      string
-	Command   *Command
-	StrValue  string
-	BoolValue bool
-	EnvVars   []envVar
+	Name         string
+	Command      *Command
+	EnvVars      []envVar
+	StrValue     string
+	BoolValue    bool
+	Float64Value float64
 }
 type envVar struct {
 	Key   string
@@ -199,6 +201,7 @@ type envVar struct {
 func TestEnvironmentVariables(t *testing.T) {
 	var testString string
 	var testBool bool
+	var testFloat64 float64
 
 	tests := []testEnvironmentVariables{
 		testEnvironmentVariables{
@@ -214,13 +217,19 @@ func TestEnvironmentVariables(t *testing.T) {
 						Name:        "test-bool",
 						Destination: &testBool,
 					},
+					&Float64Variable{
+						Name:        "test-float-64",
+						Destination: &testFloat64,
+					},
 				},
 			},
-			StrValue:  "a",
-			BoolValue: true,
+			StrValue:     "a",
+			BoolValue:    true,
+			Float64Value: float64(1.5),
 			EnvVars: []envVar{
 				envVar{"TEST_VALUE", "a"},
 				envVar{"TEST_BOOL", "true"},
+				envVar{"TEST_FLOAT_64", "1.5"},
 			},
 		},
 		testEnvironmentVariables{
@@ -259,6 +268,9 @@ func TestEnvironmentVariables(t *testing.T) {
 
 			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
 			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
+			if test.Float64Value != float64(0) {
+				assert.Equal(t, test.Float64Value, testFloat64, "test float64 should be the same.")
+			}
 
 			for _, envVar := range test.EnvVars {
 				assert.NoError(t, os.Unsetenv(envVar.Key), "Should not error while unsetting the env var.")
@@ -268,16 +280,18 @@ func TestEnvironmentVariables(t *testing.T) {
 }
 
 type testCLIFlags struct {
-	Name      string
-	Command   *Command
-	StrValue  string
-	BoolValue bool
-	Args      []string
+	Name         string
+	Command      *Command
+	StrValue     string
+	BoolValue    bool
+	Float64Value float64
+	Args         []string
 }
 
 func TestCLIFlags(t *testing.T) {
 	var testString string
 	var testBool bool
+	var testFloat64 float64
 
 	tests := []testCLIFlags{
 		testCLIFlags{
@@ -293,11 +307,16 @@ func TestCLIFlags(t *testing.T) {
 						Name:        "test-bool",
 						Destination: &testBool,
 					},
+					&Float64Variable{
+						Name:        "test-float-64",
+						Destination: &testFloat64,
+					},
 				},
 			},
-			StrValue:  "random",
-			BoolValue: true,
-			Args:      []string{"path_to_exec", "--test-value=random", "--test-bool=true"},
+			StrValue:     "random",
+			BoolValue:    true,
+			Float64Value: float64(1.5),
+			Args:         []string{"path_to_exec", "--test-value=random", "--test-bool=true", "--test-float-64=1.5"},
 		},
 		testCLIFlags{
 			Name: "subommand",
@@ -325,13 +344,18 @@ func TestCLIFlags(t *testing.T) {
 								Name:        "test-bool",
 								Destination: &testBool,
 							},
+							&Float64Variable{
+								Name:        "test-float-64",
+								Destination: &testFloat64,
+							},
 						},
 					},
 				},
 			},
-			StrValue:  "used",
-			BoolValue: true,
-			Args:      []string{"path_to_exec", "--test-value=ignored", "--test-bool=true", "nested", "--test-value=used"},
+			StrValue:     "used",
+			BoolValue:    true,
+			Float64Value: float64(2.5),
+			Args:         []string{"path_to_exec", "--test-value=ignored", "--test-bool=true", "nested", "--test-value=used", "--test-float-64=2.5"},
 		},
 	}
 
@@ -343,6 +367,74 @@ func TestCLIFlags(t *testing.T) {
 
 			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
 			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
+			if test.Float64Value != float64(0) {
+				assert.Equal(t, test.Float64Value, testFloat64, "test float64 should be the same.")
+			}
+		})
+	}
+}
+
+type testTomlConfig struct {
+	Name       string
+	Command    *Command
+	ConfigPath string
+	Expected   *fullTestConfig
+}
+
+type fullTestConfig struct {
+	TestString  string
+	TestFloat64 float64
+	TestBool    bool
+}
+
+func TestTomlConfig(t *testing.T) {
+	config := &fullTestConfig{}
+
+	tests := []testTomlConfig{
+		testTomlConfig{
+			Name:       "Basic",
+			ConfigPath: "./fixtures/basic_test.toml",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&Float64Variable{
+						Name:        "testfloat",
+						Description: "Setting a float64 variable.",
+						Destination: &config.TestFloat64,
+					},
+					&StringVariable{
+						Name:        "teststring",
+						Description: "Setting a string variable.",
+						Destination: &config.TestString,
+					},
+					&BoolVariable{
+						Name:        "testbool",
+						Description: "Setting a bool variable.",
+						Destination: &config.TestBool,
+					},
+					&ConfigVariable{
+						StringVariable: &StringVariable{
+							Required:    true,
+							Name:        "config",
+							Description: "Main configuration",
+						},
+						Type: TomlConfig,
+					},
+				},
+			},
+			Expected: &fullTestConfig{
+				TestFloat64: float64(1.2345),
+				TestString:  "hi",
+				TestBool:    true,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.Run([]string{"path_to_exec", fmt.Sprintf("--config=%s", test.ConfigPath)})
+			assert.Equal(t, test.Expected, config, "config values should be the same.")
 		})
 	}
 }
