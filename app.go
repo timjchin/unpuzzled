@@ -36,6 +36,7 @@ const (
 	JsonConfig
 	TomlConfig
 	CliFlags
+	DefaultValue
 )
 
 var ParingTypeStringMap = map[ParsingType]string{
@@ -43,6 +44,7 @@ var ParingTypeStringMap = map[ParsingType]string{
 	JsonConfig:           "JSON Config",
 	TomlConfig:           "Toml Config",
 	CliFlags:             "CLI Flag",
+	DefaultValue:         "Default Value",
 }
 
 // Create a new application with default values set.
@@ -101,6 +103,7 @@ func (a *App) parseCommands() {
 	a.activeCommands = a.Command.GetActiveCommands()
 	a.Command.findConfigVars()
 	a.Command.parseConfigVars()
+	a.Command.applyDefaultValues()
 	settingsMap := a.parseByOrder()
 	a.applySettingsMap(settingsMap)
 	settingsMap.checkDuplicatePointers()
@@ -119,6 +122,8 @@ func (a *App) parseByOrder() *mappedSettings {
 	if a.ParsingOrder == nil {
 		log.Fatal("No parsing order! Use unpuzzled.NewApp when creating an application.")
 	}
+
+	settingsMap.addParsedArray(a.Command.getDefaultValues())
 
 	for _, order := range a.ParsingOrder {
 		switch order {
@@ -198,6 +203,9 @@ func (m *mappedSettings) checkDuplicatePointers() {
 	for _, commandName := range m.MainMap {
 		for _, settings := range commandName {
 			for _, setting := range settings {
+				if setting.Source == DefaultValue {
+					continue
+				}
 				if pointerMap[setting.Destination] == nil {
 					pointerMap[setting.Destination] = make([]*activeSetting, 0)
 				}
@@ -297,13 +305,13 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 {{ range $k, $var := $vars }}{{ $length := len $vars -}}
     {{ if $var.DuplicateDestination -}}
 		{{ red $key }} = {{ red (stringify $var.Value) }}
-	{{ red "ignored" }} {{ sourceString $var -}} {{ red " from overwritten pointer." }}
+	{{ red "ignored" }} {{ sourceString $var -}} {{ red " overwritten pointer." }}
 	{{ else if eq $length (plus1 $k) -}}
 		{{ green $key }} = {{ green (stringify $var.Value) }}
 	{{ green "set from" }} {{ sourceString $var -}} 
 	{{ else -}} 
 		{{ red $key }} = {{ red (stringify $var.Value) }}
-	{{ red "ignored from" }} {{ sourceString $var -}} 
+	{{ red "ignored" }} {{ sourceString $var -}} 
 	{{ end }}
 {{ end -}}
 {{ end }}

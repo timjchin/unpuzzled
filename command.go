@@ -139,6 +139,13 @@ commandLoop:
 	return nil
 }
 
+// set all variables to default values.
+func (c *Command) applyDefaultValues() {
+	c.loopActiveVariables(func(c *Command, variable Variable) {
+		variable.setDefaults()
+	})
+}
+
 func (c *Command) parseFlags() error {
 	if c.Subcommands != nil {
 		for _, command := range c.Subcommands {
@@ -266,7 +273,23 @@ func (c *Command) getSetFlags() []*activeSetting {
 				}
 			}
 		})
+	})
+	return allSettings
+}
 
+func (c *Command) getDefaultValues() []*activeSetting {
+	var allSettings []*activeSetting
+	c.loopActiveVariables(func(command *Command, variable Variable) {
+		expandedName := command.GetExpandedName()
+		if value, isSet := variable.GetDefault(); isSet {
+			allSettings = append(allSettings, &activeSetting{
+				CommandPath:  expandedName,
+				VariableName: variable.GetName(),
+				Value:        value,
+				Source:       DefaultValue,
+				Destination:  variable.GetDestination(),
+			})
+		}
 	})
 	return allSettings
 }
