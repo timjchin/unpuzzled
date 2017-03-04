@@ -32,9 +32,23 @@ func (s *StringVariable) IsRequired() bool {
 	return s.Required
 }
 
+func (s *StringVariable) GetDefault() (interface{}, bool) {
+	if s.Default == "" {
+		return "", false
+	} else {
+		return s.Default, true
+	}
+}
+
 func (s *StringVariable) apply(val interface{}) {
 	if stringVal, ok := val.(string); ok {
 		*s.Destination = stringVal
+	}
+}
+
+func (s *StringVariable) setDefaults() {
+	if s.Default != "" {
+		*s.Destination = s.Default
 	}
 }
 

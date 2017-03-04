@@ -35,10 +35,18 @@ func (b *BoolVariable) GetDestination() interface{} {
 	return b.Destination
 }
 
+func (b *BoolVariable) GetDefault() (interface{}, bool) {
+	return b.Default, true
+}
+
 func (b *BoolVariable) apply(val interface{}) {
 	if boolVal, ok := val.(bool); ok {
 		*b.Destination = boolVal
 	}
+}
+
+func (b *BoolVariable) setDefaults() {
+	*b.Destination = b.Default
 }
 
 func (b *BoolVariable) setFlag(flagset *flag.FlagSet) {

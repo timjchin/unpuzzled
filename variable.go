@@ -10,11 +10,15 @@ type Variable interface {
 	GetName() string
 	GetDescription() string
 	GetDestination() interface{}
+	// return the default value, bool if it's set or not.
+	GetDefault() (interface{}, bool)
+	IsRequired() bool
+
+	setDefaults()
 	setFlag(*flag.FlagSet)
 	setEnv() (interface{}, bool)
 	apply(interface{})
 	getFlagValue(*flag.FlagSet) (interface{}, bool)
-	IsRequired() bool
 }
 
 var osToEnvReplaceRegexp = regexp.MustCompile(`[\.\-]`)
