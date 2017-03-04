@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -300,14 +301,17 @@ func (c *Command) parseEnvVars() []*activeSetting {
 	var allSettings []*activeSetting
 	c.loopActiveVariables(func(command *Command, variable Variable) {
 		expandedName := command.GetExpandedName()
-		if val, set := variable.setEnv(); set {
-			allSettings = append(allSettings, &activeSetting{
-				CommandPath:  expandedName,
-				VariableName: variable.GetName(),
-				Value:        val,
-				Source:       EnvironmentVariables,
-				Destination:  variable.GetDestination(),
-			})
+		envName := convertNameToOS(variable.GetName())
+		if value, found := os.LookupEnv(envName); found {
+			if val, set := variable.setEnv(value, envName); set {
+				allSettings = append(allSettings, &activeSetting{
+					CommandPath:  expandedName,
+					VariableName: variable.GetName(),
+					Value:        val,
+					Source:       EnvironmentVariables,
+					Destination:  variable.GetDestination(),
+				})
+			}
 		}
 	})
 	return allSettings

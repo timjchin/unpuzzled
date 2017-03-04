@@ -32,7 +32,6 @@ Clarity prevents confusion.
 
 Left to do:
 * Help text
-* Tests
 * More variable types
 
 Goals

@@ -2,7 +2,6 @@ package unpuzzled
 
 import (
 	"flag"
-	"os"
 )
 
 type StringVariable struct {
@@ -13,7 +12,6 @@ type StringVariable struct {
 	Destination *string
 
 	flagDestination *string
-	envName         string
 }
 
 func (s *StringVariable) GetName() string {
@@ -66,10 +64,6 @@ func (s *StringVariable) getFlagValue(set *flag.FlagSet) (interface{}, bool) {
 	}
 }
 
-func (s *StringVariable) setEnv() (interface{}, bool) {
-	s.envName = convertNameToOS(s.Name)
-	if value, found := os.LookupEnv(s.envName); found {
-		return value, true
-	}
-	return nil, false
+func (s *StringVariable) setEnv(value string, envName string) (interface{}, bool) {
+	return value, true
 }

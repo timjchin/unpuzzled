@@ -2,7 +2,6 @@ package unpuzzled
 
 import (
 	"flag"
-	"os"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -16,7 +15,6 @@ type BoolVariable struct {
 	Destination *bool
 
 	flagDestination *bool
-	envName         string
 }
 
 func (b *BoolVariable) GetName() string {
@@ -63,19 +61,15 @@ func (b *BoolVariable) getFlagValue(set *flag.FlagSet) (interface{}, bool) {
 	return *b.flagDestination, true
 }
 
-func (b *BoolVariable) setEnv() (interface{}, bool) {
-	b.envName = convertNameToOS(b.Name)
-	if value, found := os.LookupEnv(b.envName); found {
-		boolValue, err := strconv.ParseBool(value)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"envName":   b.envName,
-				"boolValue": boolValue,
-				"err":       err,
-				"name":      b.Name,
-			}).Fatal("Failed to parse bool variable.")
-		}
-		return boolValue, true
+func (b *BoolVariable) setEnv(value string, envName string) (interface{}, bool) {
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"envName":   envName,
+			"boolValue": boolValue,
+			"err":       err,
+			"name":      b.Name,
+		}).Fatal("Failed to parse bool variable.")
 	}
-	return nil, false
+	return boolValue, true
 }
