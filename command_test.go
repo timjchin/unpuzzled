@@ -493,3 +493,99 @@ func TestDefaultValues(t *testing.T) {
 		})
 	}
 }
+
+type testRequiredValues struct {
+	Name               string
+	Command            *Command
+	Args               []string
+	ExpectedMissingMap map[string][]Variable
+}
+
+func TestRequiredValues(t *testing.T) {
+	var stringVar string
+	var boolVar bool
+
+	requiredStringVar := &StringVariable{
+		Name:        "test-value",
+		Destination: &stringVar,
+		Required:    true,
+	}
+
+	requiredBoolVar := &BoolVariable{
+		Required:    true,
+		Name:        "test-bool",
+		Destination: &boolVar,
+	}
+
+	requiredStringVarWithDefault := &StringVariable{
+		Name:        "test-value-b",
+		Default:     "test",
+		Destination: &stringVar,
+		Required:    true,
+	}
+
+	tests := []testRequiredValues{
+		testRequiredValues{
+			Name: "Basic required test.",
+			Command: &Command{
+				Name:      "basic",
+				Variables: []Variable{requiredBoolVar, requiredStringVar},
+			},
+			Args: []string{},
+			ExpectedMissingMap: map[string][]Variable{
+				"basic": []Variable{
+					requiredBoolVar,
+					requiredStringVar,
+				},
+			},
+		},
+		testRequiredValues{
+			Name: "Variable that has a default, but is required will not appear in the list.",
+			Command: &Command{
+				Name:      "basic",
+				Variables: []Variable{requiredBoolVar, requiredStringVar, requiredStringVarWithDefault},
+			},
+			Args: []string{},
+			ExpectedMissingMap: map[string][]Variable{
+				"basic": []Variable{
+					requiredBoolVar,
+					requiredStringVar,
+				},
+			},
+		},
+		testRequiredValues{
+			Name: "Test nested values",
+			Command: &Command{
+				Name:      "basic",
+				Variables: []Variable{requiredBoolVar, requiredStringVar, requiredStringVarWithDefault},
+				Subcommands: []*Command{
+					&Command{
+						Name:      "basic",
+						Variables: []Variable{requiredBoolVar, requiredStringVar, requiredStringVarWithDefault},
+					},
+				},
+			},
+			Args: []string{"basic"},
+			ExpectedMissingMap: map[string][]Variable{
+				"basic": []Variable{
+					requiredBoolVar,
+					requiredStringVar,
+				},
+				"basic.basic": []Variable{
+					requiredBoolVar,
+					requiredStringVar,
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.args = test.Args
+			app.parseCommands()
+			app.checkRequiredVariables()
+			assert.Equal(t, test.ExpectedMissingMap, app.missingRequiredVariables, "Required variables should be the same.")
+		})
+	}
+}
