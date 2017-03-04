@@ -52,9 +52,6 @@ func (i *IntVariable) apply(val interface{}) {
 		value := val.(float64)
 		*i.Destination = int(value)
 	}
-	if val, ok := val.(int); ok {
-		*i.Destination = val
-	}
 }
 
 func (i *IntVariable) setDefaults() {
