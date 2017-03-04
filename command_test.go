@@ -385,6 +385,7 @@ type fullTestConfig struct {
 	TestString  string
 	TestFloat64 float64
 	TestBool    bool
+	TestInt     int
 }
 
 func TestTomlConfig(t *testing.T) {
@@ -412,6 +413,11 @@ func TestTomlConfig(t *testing.T) {
 						Description: "Setting a bool variable.",
 						Destination: &config.TestBool,
 					},
+					&IntVariable{
+						Name:        "testint",
+						Description: "Setting an integer variable.",
+						Destination: &config.TestInt,
+					},
 					&ConfigVariable{
 						StringVariable: &StringVariable{
 							Required:    true,
@@ -426,6 +432,7 @@ func TestTomlConfig(t *testing.T) {
 				TestFloat64: float64(1.2345),
 				TestString:  "hi",
 				TestBool:    true,
+				TestInt:     5,
 			},
 		},
 	}

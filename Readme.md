@@ -29,7 +29,6 @@ Clarity prevents confusion.
     * If a variable has a `Default` value, it can never be marked as required, because a valid value will be set.
 
 Left to do:
-* Help text
 * More variable types
 
 Goals

@@ -41,8 +41,16 @@ func (f *Float64Variable) GetDefault() (interface{}, bool) {
 }
 
 func (f *Float64Variable) apply(val interface{}) {
-	if val, ok := val.(float64); ok {
-		*f.Destination = val
+	switch val.(type) {
+	case int:
+		value := val.(int)
+		*f.Destination = float64(value)
+	case int64:
+		value := val.(int64)
+		*f.Destination = float64(value)
+	case float64:
+		value := val.(float64)
+		*f.Destination = value
 	}
 }
 
