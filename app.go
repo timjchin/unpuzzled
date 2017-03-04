@@ -1,10 +1,12 @@
 package unpuzzled
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"os"
 
+	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,12 +20,12 @@ type App struct {
 	Authors                  []Author
 	HelpCommands             map[string]bool
 	Action                   func()
-	ConfigFlag               string
 	RemoveColor              bool
 	args                     []string
 	activeCommands           []*Command
 	missingRequiredVariables map[string][]Variable
 	settingsMap              *mappedSettings
+	HelpTextVariablesInTable bool
 }
 
 type ParsingType int
@@ -36,7 +38,7 @@ const (
 	DefaultValue
 )
 
-var ParingTypeStringMap = map[ParsingType]string{
+var ParsingTypeStringMap = map[ParsingType]string{
 	EnvironmentVariables: "Environment",
 	JsonConfig:           "JSON Config",
 	TomlConfig:           "Toml Config",
@@ -60,6 +62,7 @@ func NewApp() *App {
 			TomlConfig,
 			CliFlags,
 		},
+		HelpTextVariablesInTable: true,
 	}
 }
 
@@ -90,9 +93,11 @@ func (a *App) parseCommands() {
 	}
 	a.Command.buildTree(nil)
 	a.Command.assignArguments(a.args)
+	a.activeCommands = a.Command.GetActiveCommands()
+	a.Command.findConfigVars()
 
 	if helpCommand, isHelp := a.Command.isHelpCommand(a.HelpCommands); isHelp {
-		fmt.Println("help.", helpCommand.Name)
+		a.PrintHelpCommand(helpCommand)
 		os.Exit(0)
 	}
 
@@ -101,8 +106,6 @@ func (a *App) parseCommands() {
 		return
 	}
 
-	a.activeCommands = a.Command.GetActiveCommands()
-	a.Command.findConfigVars()
 	a.Command.parseConfigVars()
 	a.Command.applyDefaultValues()
 	a.parseByOrder()
@@ -137,7 +140,7 @@ func (a *App) PrintMissingRequiredVariables() {
 		panic("There are no missing required variables.")
 	}
 	t := template.New("required-variables")
-	funcMap := getColorFuncMap(a.RemoveColor)
+	funcMap := getBaseFuncMap(a.RemoveColor)
 	t.Funcs(funcMap)
 	t.Parse(`---------------------------
 {{ bold (red "Missing Required Variables:") }}
@@ -150,6 +153,99 @@ func (a *App) PrintMissingRequiredVariables() {
 {{ end }}
 `)
 	t.Execute(os.Stdout, a.missingRequiredVariables)
+}
+
+type helpStruct struct {
+	App          *App
+	HelpCommand  *Command
+	ParsingOrder []string
+	UseTable     bool
+}
+
+func (a *App) PrintHelpCommand(command *Command) {
+	t := template.New("required-variables")
+	funcMap := getBaseFuncMap(a.RemoveColor)
+	funcMap["sourceString"] = func(p ParsingType) string {
+		return ParsingTypeStringMap[p]
+	}
+	funcMap["variableTable"] = func(command *Command) string {
+		buffer := new(bytes.Buffer)
+		table := tablewriter.NewWriter(buffer)
+		table.SetHeader([]string{
+			"Flag",
+			"Default",
+			"Required",
+			"Env Name",
+			"Description",
+		})
+		for _, variable := range command.Variables {
+			defaultValue := "--"
+			if varDefault, set := variable.GetDefault(); set {
+				defaultValue = fmt.Sprintf("%v", varDefault)
+			}
+			required := "No"
+			if variable.IsRequired() {
+				required = "Required"
+			}
+			row := []string{
+				"--" + variable.GetName(),
+				defaultValue,
+				required,
+				convertNameToOS(variable.GetName()),
+				variable.GetDescription(),
+			}
+			table.Append(row)
+		}
+		table.Render()
+		return buffer.String()
+	}
+	t.Funcs(funcMap)
+	t.Parse(`{{ bold (green "NAME:") }} 
+{{ .HelpCommand.Name }}
+
+{{ if gt (len .HelpCommand.Usage) 0 }}{{ bold (green "USAGE:") }}
+{{ .HelpCommand.Usage }}
+{{ end }}
+{{ bold (green "AVAILABLE SUBCOMMANDS:")}}
+{{ range $i, $c := .HelpCommand.Subcommands -}}
+	{{ if eq (len $c.Usage) 0 -}}
+{{ bold $c.Name }}
+{{ else -}}
+{{ bold $c.Name }} : {{ $c.Usage }}
+{{ end -}}
+{{ end -}}
+{{ bold "help" }} : Print this help message
+
+{{ bold (green "PARSING ORDER:")}} (set values will override in this order)
+{{ $length := len .ParsingOrder -}}
+{{ range $i, $p := .ParsingOrder -}}
+	{{ if eq $length (plus1 $i) -}}
+		{{ $p }}
+	{{ else -}}
+		{{ $p }} {{ noEscape "> " -}} 
+	{{ end -}}
+{{ end }}
+{{ bold (green "VARIABLES:")}}
+{{ if .UseTable -}}
+{{ noEscape (variableTable .HelpCommand) }}
+{{ else -}}
+{{ range $i, $v := .HelpCommand.Variables -}}
+{{ blue "--"}}{{ blue $v.GetName }} {{ if $v.IsRequired }}({{ red "Required" }}) {{ end }}{{ noEscape $v.GetDescription }}
+{{ end -}}
+{{ end -}}
+`)
+
+	parsingOrder := []string{}
+	for _, val := range a.ParsingOrder {
+		parsingOrder = append(parsingOrder, ParsingTypeStringMap[val])
+	}
+	reverseStringSlice(parsingOrder)
+	t.Execute(os.Stdout, &helpStruct{
+		App:          a,
+		HelpCommand:  command,
+		ParsingOrder: parsingOrder,
+		UseTable:     a.HelpTextVariablesInTable,
+	})
 }
 
 // use the set Parsing order to apply the variables in place, adding it to the settings map.

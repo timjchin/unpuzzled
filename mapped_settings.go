@@ -86,7 +86,7 @@ func (m *mappedSettings) PrintDuplicates(commands []*Command) {
 				row := []string{
 					expandedName,
 					setting.VariableName,
-					ParingTypeStringMap[setting.Source],
+					ParsingTypeStringMap[setting.Source],
 					fmt.Sprintf("%v", setting.Value),
 					reflect.TypeOf(setting.Value).String(),
 					status,
@@ -104,20 +104,16 @@ func (m *mappedSettings) PrintDuplicates(commands []*Command) {
 // Use a custom formatted string to print duplicates on Stdout.
 func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 	t := template.New("duplicates")
-	funcMap := getColorFuncMap(noColor)
+	funcMap := getBaseFuncMap(noColor)
 
 	funcMap["sourceString"] = func(setting *activeSetting) string {
 		if setting.Source == EnvironmentVariables {
-			return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
+			return fmt.Sprintf("%s (%s)", ParsingTypeStringMap[setting.Source], convertNameToOS(setting.VariableName))
 		} else if setting.Source == TomlConfig || setting.Source == JsonConfig {
-			return fmt.Sprintf("%s (%s)", ParingTypeStringMap[setting.Source], setting.SettingName)
+			return fmt.Sprintf("%s (%s)", ParsingTypeStringMap[setting.Source], setting.SettingName)
 		} else {
-			return ParingTypeStringMap[setting.Source]
+			return ParsingTypeStringMap[setting.Source]
 		}
-	}
-
-	funcMap["plus1"] = func(x int) int {
-		return x + 1
 	}
 
 	funcMap["stringify"] = func(x interface{}) string {

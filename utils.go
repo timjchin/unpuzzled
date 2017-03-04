@@ -14,12 +14,18 @@ func reverseStringSlice(a []string) {
 	}
 }
 
-func getColorFuncMap(noColor bool) template.FuncMap {
+func getBaseFuncMap(noColor bool) template.FuncMap {
 	funcMap := template.FuncMap{
 		"blue":  color.BlueString,
 		"red":   color.RedString,
 		"green": color.GreenString,
 		"bold":  color.New(color.Bold).Sprint,
+	}
+	funcMap["noEscape"] = func(str string) template.HTML {
+		return template.HTML(str)
+	}
+	funcMap["plus1"] = func(x int) int {
+		return x + 1
 	}
 	if noColor {
 		funcMap["blue"] = identityString
