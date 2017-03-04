@@ -36,7 +36,11 @@ func (b *BoolVariable) GetDestination() interface{} {
 }
 
 func (b *BoolVariable) GetDefault() (interface{}, bool) {
-	return b.Default, true
+	if b.Default {
+		return b.Default, true
+	} else {
+		return b.Default, false
+	}
 }
 
 func (b *BoolVariable) apply(val interface{}) {

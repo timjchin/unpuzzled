@@ -104,10 +104,9 @@ func (a *App) parseCommands() {
 	a.Command.findConfigVars()
 	a.Command.parseConfigVars()
 	a.Command.applyDefaultValues()
-	settingsMap := a.parseByOrder()
-	a.applySettingsMap(settingsMap)
-	settingsMap.checkDuplicatePointers()
-	a.settingsMap = settingsMap
+	a.parseByOrder()
+	a.applySettingsMap()
+	a.settingsMap.checkDuplicatePointers()
 }
 
 func (a *App) printOverrides() {
@@ -117,7 +116,7 @@ func (a *App) printOverrides() {
 
 // use the set Parsing order to apply the variables in place, adding it to the settings map.
 // The last entries in the settingsMap are the selected variables.
-func (a *App) parseByOrder() *mappedSettings {
+func (a *App) parseByOrder() {
 	settingsMap := newMappedSettings()
 	if a.ParsingOrder == nil {
 		log.Fatal("No parsing order! Use unpuzzled.NewApp when creating an application.")
@@ -150,16 +149,16 @@ func (a *App) parseByOrder() *mappedSettings {
 			settingsMap.addParsedArray(a.Command.getSetFlags())
 		}
 	}
-	return settingsMap
+	a.settingsMap = settingsMap
 }
 
-func (a *App) applySettingsMap(settingsMap *mappedSettings) {
+func (a *App) applySettingsMap() {
 	commandMap := a.Command.GetExpandedActiveCommmands()
 	// loop through commands, ensure that the order of settings are constantly applied,
 	// instead of looping through MainMap, which is not a consistent order.
 	for _, command := range a.activeCommands {
 		path := command.GetExpandedName()
-		variableSettingsMap := settingsMap.MainMap[path]
+		variableSettingsMap := a.settingsMap.MainMap[path]
 		currCommand := commandMap[path]
 		variableMap := currCommand.GetVariableMap()
 
