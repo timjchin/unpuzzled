@@ -44,6 +44,10 @@ type (
 	}
 )
 
+func (a *activeSetting) GetFullPath() string {
+	return fmt.Sprintf("%s.%s", a.CommandPath, a.VariableName)
+}
+
 // Get the expanded name of a command, which includes the name of the parent commands, separated by a "."
 // ex. main.sub1.sub2
 func (c *Command) GetExpandedName() string {

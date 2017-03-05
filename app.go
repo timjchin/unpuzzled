@@ -138,6 +138,7 @@ func (a *App) printOverrides() {
 	if a.Silent {
 		return
 	}
+	a.settingsMap.OrderSettings(a.activeCommands)
 	if a.OverridesOutputInTable {
 		a.settingsMap.PrintDuplicates(a.activeCommands)
 	} else {
@@ -309,7 +310,12 @@ func (a *App) applySettingsMap() {
 		currCommand := commandMap[path]
 		variableMap := currCommand.GetVariableMap()
 
-		for _, setting := range variableSettingsMap {
+		for _, variable := range command.Variables {
+			name := variable.GetName()
+			setting := variableSettingsMap[name]
+			if setting == nil {
+				continue
+			}
 			activeSetting := setting[len(setting)-1]
 			currVariable := variableMap[activeSetting.VariableName]
 			// special case, ignore a config variable.
