@@ -1,0 +1,6 @@
+[basic]
+testfloat=1.2345
+teststring="hi"
+testbool=true
+testint=5
+testint64=100
