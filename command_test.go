@@ -486,6 +486,78 @@ func TestTomlConfig(t *testing.T) {
 	}
 }
 
+type testJsonConfig struct {
+	Name       string
+	Command    *Command
+	ConfigPath string
+	Expected   *fullTestConfig
+}
+
+func TestJsonConfig(t *testing.T) {
+	config := &fullTestConfig{}
+
+	tests := []testJsonConfig{
+		testJsonConfig{
+			Name:       "Basic",
+			ConfigPath: "./fixtures/basic_test.json",
+			Command: &Command{
+				Name: "basic",
+				Variables: []Variable{
+					&Float64Variable{
+						Name:        "test-float",
+						Description: "Setting a float64 variable.",
+						Destination: &config.TestFloat64,
+					},
+					&StringVariable{
+						Name:        "test-string",
+						Description: "Setting a string variable.",
+						Destination: &config.TestString,
+					},
+					&BoolVariable{
+						Name:        "test-bool",
+						Description: "Setting a bool variable.",
+						Destination: &config.TestBool,
+					},
+					&IntVariable{
+						Name:        "test-int",
+						Description: "Setting an integer variable.",
+						Destination: &config.TestInt,
+					},
+					&Int64Variable{
+						Name:        "test-int-64",
+						Description: "Testing an int64 variable.",
+						Destination: &config.TestInt64,
+					},
+					&ConfigVariable{
+						StringVariable: &StringVariable{
+							Required:    true,
+							Name:        "config",
+							Description: "Main configuration",
+						},
+						Type: JsonConfig,
+					},
+				},
+			},
+			Expected: &fullTestConfig{
+				TestFloat64: float64(1.2345),
+				TestString:  "hi",
+				TestBool:    true,
+				TestInt:     5,
+				TestInt64:   int64(100),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			app := NewApp()
+			app.Command = test.Command
+			app.Silent = true
+			app.Run([]string{"path_to_exec", fmt.Sprintf("--config=%s", test.ConfigPath)})
+			assert.Equal(t, test.Expected, config, "config values should be the same.")
+		})
+	}
+}
+
 type testLoopActiveCommands struct {
 	Name     string
 	Command  *Command

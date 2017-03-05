@@ -1,0 +1,9 @@
+{
+    "basic": {
+        "test-float": 1.2345,
+        "test-string": "hi",
+        "test-bool": true,
+        "test-int": 5,
+        "test-int-64": 100
+    }
+}
