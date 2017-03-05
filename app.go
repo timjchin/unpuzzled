@@ -114,7 +114,7 @@ func (a *App) parseCommands() {
 	a.Command.applyDefaultValues()
 	a.parseByOrder()
 	a.applySettingsMap()
-	a.settingsMap.checkDuplicatePointers()
+	a.settingsMap.checkDuplicatePointers(a.activeCommands)
 }
 
 func (a *App) checkRequiredVariables() {

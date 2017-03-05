@@ -41,79 +41,87 @@ func (m *mappedSettings) addParsedArray(settings []*activeSetting) {
 // Helps with printing variables without race conditions (unguaranteed order of maps).
 func (m *mappedSettings) OrderSettings(commands []*Command) {
 	var orderedSettings []*orderedSettingGroup
+	m.loopCommands(commands, func(command *Command, variable Variable, settings []*activeSetting) {
+		foundCurrent := false
+		index := 0
+		expandedName := command.GetExpandedName()
+		for _, setSettings := range orderedSettings {
+			if setSettings.CommandPath == expandedName {
+				foundCurrent = true
+			}
+		}
+		if !foundCurrent {
+			index = len(orderedSettings)
+			orderedSettings = append(orderedSettings, &orderedSettingGroup{
+				CommandPath: expandedName,
+				Settings:    make([][]*activeSetting, 0),
+			})
+		}
+		orderedSettings[index].Settings = append(orderedSettings[index].Settings, settings)
+	})
+	m.OrderedSettings = orderedSettings
+}
+
+func (m *mappedSettings) loopCommands(commands []*Command, fn func(*Command, Variable, []*activeSetting)) {
 	for _, command := range commands {
 		expandedName := command.GetExpandedName()
 		commandSettings := m.MainMap[expandedName]
-		if commandSettings == nil {
-			continue
-		}
 
 		for _, variable := range command.Variables {
 			variableSettings := commandSettings[variable.GetName()]
 			if variableSettings == nil {
 				continue
 			}
-
-			foundCurrent := false
-			index := 0
-			for _, setSettings := range orderedSettings {
-				if setSettings.CommandPath == expandedName {
-					foundCurrent = true
-				}
-			}
-			if !foundCurrent {
-				index = len(orderedSettings)
-				orderedSettings = append(orderedSettings, &orderedSettingGroup{
-					CommandPath: expandedName,
-					Settings:    make([][]*activeSetting, 0),
-				})
-			}
-			orderedSettings[index].Settings = append(orderedSettings[index].Settings, variableSettings)
+			fn(command, variable, variableSettings)
 		}
 	}
-	m.OrderedSettings = orderedSettings
 }
 
-func (m *mappedSettings) checkDuplicatePointers() {
+func (m *mappedSettings) checkDuplicatePointers(commands []*Command) {
 	// generate the map of pointers.
 	pointerMap := make(map[interface{}][]*activeSetting)
-	for _, commandName := range m.MainMap {
-		for _, settings := range commandName {
-			for _, setting := range settings {
-				if setting.Source == DefaultValue {
-					continue
-				}
-				if pointerMap[setting.Destination] == nil {
-					pointerMap[setting.Destination] = make([]*activeSetting, 0)
-				}
-				pointerMap[setting.Destination] = append(pointerMap[setting.Destination], setting)
-			}
-		}
-	}
+	pointerOrder := make([]interface{}, 0)
 
-	for _, settings := range pointerMap {
-		settingsLen := len(settings)
-		// if more than 1 entry exists in the []*activeSetting for one pointer, it's a duplicate, and will be overwritten.
-		if settingsLen < 2 {
-			continue
-		}
-		// count the numbers of unique command + variable names
-		commandVariableMap := make(map[string]int)
+	m.loopCommands(commands, func(command *Command, variable Variable, settings []*activeSetting) {
 		for _, setting := range settings {
-			path := setting.GetFullPath()
-			commandVariableMap[path]++
-		}
-		for _, setting := range settings {
-			path := setting.GetFullPath()
-			// if there's more than one, then these are legitimate overrides, not
-			// the same pointer across many variables.
-			if commandVariableMap[path] > 1 {
+			if setting.Source == DefaultValue {
 				continue
 			}
-
-			setting.DuplicateDestination = true
+			if pointerMap[setting.Destination] == nil {
+				pointerMap[setting.Destination] = make([]*activeSetting, 0)
+				pointerOrder = append(pointerOrder, setting.Destination)
+			}
+			pointerMap[setting.Destination] = append(pointerMap[setting.Destination], setting)
 		}
-	}
+
+		for _, pointer := range pointerOrder {
+			settings := pointerMap[pointer]
+			settingsLen := len(settings)
+
+			// if more than 1 entry exists in the []*activeSetting for one pointer, it's a duplicate, and will be overwritten.
+			if settingsLen < 2 {
+				continue
+			}
+			// count the numbers of unique command + variable names
+			commandVariableMap := make(map[string]int)
+			for _, setting := range settings {
+				path := setting.GetFullPath()
+				commandVariableMap[path]++
+			}
+			for i, setting := range settings {
+				path := setting.GetFullPath()
+				// if there's more than one, then these are legitimate overrides, not
+				// the same pointer across many variables.
+				if commandVariableMap[path] > 1 {
+					continue
+				}
+
+				if i != settingsLen-1 {
+					setting.DuplicateDestination = true
+				}
+			}
+		}
+	})
 }
 
 // Helper to print duplciates in table format to Stdout.
