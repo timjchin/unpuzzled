@@ -263,6 +263,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 			app := NewApp()
 			app.Command = test.Command
+			app.Silent = true
 			app.args = []string{}
 			app.parseCommands()
 
@@ -363,6 +364,7 @@ func TestCLIFlags(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
+			app.Silent = true
 			app.Run(test.Args)
 
 			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
@@ -447,6 +449,7 @@ func TestTomlConfig(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
+			app.Silent = true
 			app.Run([]string{"path_to_exec", fmt.Sprintf("--config=%s", test.ConfigPath)})
 			assert.Equal(t, test.Expected, config, "config values should be the same.")
 		})
@@ -522,6 +525,7 @@ func TestLoopActiveCommands(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
 			app.args = test.Args
+			app.Silent = true
 			app.parseCommands()
 			outString := ""
 			app.Command.loopActiveCommands(func(c *Command) {
@@ -591,6 +595,7 @@ func TestDefaultValues(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
+			app.Silent = true
 			app.args = test.Args
 			app.parseCommands()
 			app.printOverrides()
@@ -688,6 +693,7 @@ func TestRequiredValues(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
+			app.Silent = true
 			app.args = test.Args
 			app.parseCommands()
 			app.checkRequiredVariables()

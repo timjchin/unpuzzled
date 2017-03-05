@@ -11,16 +11,19 @@ import (
 )
 
 type App struct {
-	Name                     string
-	Usage                    string
-	Description              string
-	Copyright                string
-	ParsingOrder             []ParsingType
-	Command                  *Command
-	Authors                  []Author
-	HelpCommands             map[string]bool
-	Action                   func()
-	RemoveColor              bool
+	Name         string
+	Usage        string
+	Description  string
+	Copyright    string
+	ParsingOrder []ParsingType
+	Command      *Command
+	Authors      []Author
+	HelpCommands map[string]bool
+	Action       func()
+	// All output will not include color
+	RemoveColor bool
+	// Turn off all output
+	Silent                   bool
 	args                     []string
 	activeCommands           []*Command
 	missingRequiredVariables map[string][]Variable
@@ -132,6 +135,9 @@ func (a *App) checkRequiredVariables() {
 }
 
 func (a *App) printOverrides() {
+	if a.Silent {
+		return
+	}
 	if a.OverridesOutputInTable {
 		a.settingsMap.PrintDuplicates(a.activeCommands)
 	} else {
@@ -140,6 +146,9 @@ func (a *App) printOverrides() {
 }
 
 func (a *App) PrintMissingRequiredVariables() {
+	if a.Silent {
+		return
+	}
 	if a.missingRequiredVariables == nil {
 		panic("There are no missing required variables.")
 	}
