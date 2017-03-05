@@ -120,6 +120,10 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 		return fmt.Sprintf("%v", x)
 	}
 
+	funcMap["getType"] = func(x interface{}) string {
+		return reflect.TypeOf(x).String()
+	}
+
 	t.Funcs(funcMap)
 	t.Parse(`{{ range $command, $variables := . -}}
 -------------------------------------
@@ -128,10 +132,10 @@ func (m *mappedSettings) PrintDuplicatesStdout(noColor bool) {
 -------------
 {{ range $k, $var := $vars }}{{ $length := len $vars -}}
     {{ if $var.DuplicateDestination -}}
-		{{ red $key }} = {{ red (stringify $var.Value) }}
+		{{ red $key }} = {{ red (stringify $var.Value) }} ({{ getType $var.Value }})
 	{{ red "ignored" }} {{ sourceString $var -}} {{ red " overwritten pointer." }}
 	{{ else if eq $length (plus1 $k) -}}
-		{{ green $key }} = {{ green (stringify $var.Value) }}
+		{{ green $key }} = {{ green (stringify $var.Value) }} ({{ getType $var.Value }})
 	{{ green "set from" }} {{ sourceString $var -}} 
 	{{ else -}} 
 		{{ red $key }} = {{ red (stringify $var.Value) }}
