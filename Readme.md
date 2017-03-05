@@ -15,9 +15,7 @@ Clarity prevents confusion.
     * CLI Flags
 * Ability to choose the order of precendece (ex. cli flags > JSON > TOML > ENV)
 * Main Command and Subcommands
-* Defaults to verbose output out of the box. 
-     * Ability to turn it off.
-* Destination variables
+* Defaults to verbose output out of the box, with the ability to turn it off. (app.Silent = true`)
 * Warnings on overrides 
     * Warnings on overrides by order of precedence. 
         * If a variable is set as an ENV variable, and a CLI flag overwrites it, let the user know.
@@ -34,7 +32,51 @@ Left to do:
 #### Types of Outputs
 ##### Missing Required Variables:
 Unpuzzled will parse all the inputs, and then list all of the missing required variables before exiting the program. This includes required variables in parent commands.
-![required variables](https://github.com/timjchin/unpuzzled/raw/master/fixtures/missing_required_variables.jpg "Logo Title Text 1")
+![required variables](https://github.com/timjchin/unpuzzled/raw/master/fixtures/missing_required_variables.jpg "Required Variable Example CLI Output.")
+
+##### Set Variables
+Set Variables can be shown in two outputs.
+
+Stdout is the default:
+![set variable stdout](https://github.com/timjchin/unpuzzled/raw/master/fixtures/set_variables_stdout.jpg "Example Stdout Output for set variables.")
+
+And a table option can be chosen by changing `OverridesOutputInTable` to `true`:
+```
+app := unpuzzled.NewApp()
+app.OverridesOutputInTable = true
+```
+![set variable table view](https://github.com/timjchin/unpuzzled/raw/master/fixtures/set_variables_table_output.jpg "Example Table Output for set variables.")
+
+##### Overwritten Destination
+Since unpuzzled uses pointers to set the final values, it's possible that the same pointer may be left in multiple variables. 
+
+Unpuzzled will warn you that these values have been overwritten. 
+
+In the example below, the variables `example-a` and `example-b` both point to `testString`. If both are set, `example-b` will override `example-a`, because it is later in the Variables array. 
+
+```
+var testString string
+app := unpuzzled.NewApp()
+app.Command = &unpuzzled.Command{
+    Variables: []unpuzzled.Variable{
+        &unpuzzled.StringVariable{
+            Name:        "example-a",
+            Destination: &testString,
+        },
+        &unpuzzled.StringVariable{
+            Name:        "example-b",
+            Destination: &testString,
+        },
+    },
+    Action: func() {
+        fmt.Println(testString)
+    },
+}
+app.Run(os.Args)
+```
+![overwritten pointer](https://github.com/timjchin/unpuzzled/raw/master/fixtures/overwritten_pointer.jpg "Example Output for overwritten variables.")
+
+(Full example in [example/example_ovewritten_pointer.go](https://github.com/timjchin/unpuzzled/blob/master/example/example_overwritten_pointer.go))
 
 
 #### How to use JSON / Toml configs:
