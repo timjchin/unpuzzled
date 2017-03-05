@@ -37,10 +37,12 @@ Unpuzzled will parse all the inputs, and then list all of the missing required v
 ##### Set Variables
 Set Variables can be shown in two outputs.
 
-Stdout is the default:
+###### Stdout is the default:
+
 ![set variable stdout](https://github.com/timjchin/unpuzzled/raw/master/fixtures/set_variables_stdout.jpg "Example Stdout Output for set variables.")
 
-And a table option can be chosen by changing `OverridesOutputInTable` to `true`:
+###### Table Option
+A table option can be chosen by setting `OverridesOutputIntTable` to `true`:
 ```
 app := unpuzzled.NewApp()
 app.OverridesOutputInTable = true
