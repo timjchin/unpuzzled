@@ -194,12 +194,10 @@ func loopCommands(command *Command, fn func(*Command), isFirst bool) {
 }
 
 type testEnvironmentVariables struct {
-	Name         string
-	Command      *Command
-	EnvVars      []envVar
-	StrValue     string
-	BoolValue    bool
-	Float64Value float64
+	Name     string
+	Command  *Command
+	EnvVars  []envVar
+	Expected *fullTestConfig
 }
 type envVar struct {
 	Key   string
@@ -207,9 +205,7 @@ type envVar struct {
 }
 
 func TestEnvironmentVariables(t *testing.T) {
-	var testString string
-	var testBool bool
-	var testFloat64 float64
+	config := &fullTestConfig{}
 
 	tests := []testEnvironmentVariables{
 		testEnvironmentVariables{
@@ -219,21 +215,23 @@ func TestEnvironmentVariables(t *testing.T) {
 				Variables: []Variable{
 					&StringVariable{
 						Name:        "test-value",
-						Destination: &testString,
+						Destination: &config.TestString,
 					},
 					&BoolVariable{
 						Name:        "test-bool",
-						Destination: &testBool,
+						Destination: &config.TestBool,
 					},
 					&Float64Variable{
 						Name:        "test-float-64",
-						Destination: &testFloat64,
+						Destination: &config.TestFloat64,
 					},
 				},
 			},
-			StrValue:     "a",
-			BoolValue:    true,
-			Float64Value: float64(1.5),
+			Expected: &fullTestConfig{
+				TestString:  "a",
+				TestBool:    true,
+				TestFloat64: float64(1.5),
+			},
 			EnvVars: []envVar{
 				envVar{"TEST_VALUE", "a"},
 				envVar{"TEST_BOOL", "true"},
@@ -247,19 +245,39 @@ func TestEnvironmentVariables(t *testing.T) {
 				Variables: []Variable{
 					&BoolVariable{
 						Name:        "test-bool",
-						Destination: &testBool,
+						Destination: &config.TestBool,
 					},
 					&StringVariable{
 						Name:        "test-value",
-						Destination: &testString,
+						Destination: &config.TestString,
+					},
+					&Float64Variable{
+						Name:        "test-float-64",
+						Destination: &config.TestFloat64,
+					},
+					&Int64Variable{
+						Name:        "test-int-64",
+						Destination: &config.TestInt64,
+					},
+					&IntVariable{
+						Name:        "test-int",
+						Destination: &config.TestInt,
 					},
 				},
 			},
-			BoolValue: false,
-			StrValue:  "b",
+			Expected: &fullTestConfig{
+				TestString:  "b",
+				TestBool:    false,
+				TestFloat64: float64(2.5),
+				TestInt64:   int64(100),
+				TestInt:     10,
+			},
 			EnvVars: []envVar{
 				envVar{"TEST_VALUE", "b"},
 				envVar{"TEST_BOOL", "false"},
+				envVar{"TEST_FLOAT_64", "2.5"},
+				envVar{"TEST_INT_64", "100"},
+				envVar{"TEST_INT", "10"},
 			},
 		},
 	}
@@ -275,11 +293,7 @@ func TestEnvironmentVariables(t *testing.T) {
 			app.args = []string{}
 			app.parseCommands()
 
-			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
-			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
-			if test.Float64Value != float64(0) {
-				assert.Equal(t, test.Float64Value, testFloat64, "test float64 should be the same.")
-			}
+			assert.Equal(t, test.Expected, config, "Full test config should be the same for ENV values.")
 
 			for _, envVar := range test.EnvVars {
 				assert.NoError(t, os.Unsetenv(envVar.Key), "Should not error while unsetting the env var.")
