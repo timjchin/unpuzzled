@@ -76,7 +76,7 @@ app.Command = &unpuzzled.Command{
 }
 app.Run(os.Args)
 ```
-![overwritten pointer](https://github.com/timjchin/unpuzzled/raw/master/fixtures/overwritten_pointer.jpg "Example Output for overwritten variables.")
+![overwritten pointer](https://github.com/timjchin/unpuzzled/raw/master/fixtures/overwritten_pointer.png"Example Output for overwritten variables.")
 
 (Full example in [example/example_ovewritten_pointer.go](https://github.com/timjchin/unpuzzled/blob/master/example/example_overwritten_pointer.go))
 
