@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type fullTestConfig struct {
+	TestString  string
+	TestFloat64 float64
+	TestBool    bool
+	TestInt     int
+	TestInt64   int64
+}
+
 type argumentAssignemntTest struct {
 	Name       string
 	Command    *Command
@@ -281,18 +289,14 @@ func TestEnvironmentVariables(t *testing.T) {
 }
 
 type testCLIFlags struct {
-	Name         string
-	Command      *Command
-	StrValue     string
-	BoolValue    bool
-	Float64Value float64
-	Args         []string
+	Name     string
+	Command  *Command
+	Expected *fullTestConfig
+	Args     []string
 }
 
 func TestCLIFlags(t *testing.T) {
-	var testString string
-	var testBool bool
-	var testFloat64 float64
+	config := &fullTestConfig{}
 
 	tests := []testCLIFlags{
 		testCLIFlags{
@@ -302,22 +306,24 @@ func TestCLIFlags(t *testing.T) {
 				Variables: []Variable{
 					&StringVariable{
 						Name:        "test-value",
-						Destination: &testString,
+						Destination: &config.TestString,
 					},
 					&BoolVariable{
 						Name:        "test-bool",
-						Destination: &testBool,
+						Destination: &config.TestBool,
 					},
 					&Float64Variable{
 						Name:        "test-float-64",
-						Destination: &testFloat64,
+						Destination: &config.TestFloat64,
 					},
 				},
 			},
-			StrValue:     "random",
-			BoolValue:    true,
-			Float64Value: float64(1.5),
-			Args:         []string{"path_to_exec", "--test-value=random", "--test-bool=true", "--test-float-64=1.5"},
+			Expected: &fullTestConfig{
+				TestString:  "random",
+				TestBool:    true,
+				TestFloat64: float64(1.5),
+			},
+			Args: []string{"path_to_exec", "--test-value=random", "--test-bool=true", "--test-float-64=1.5"},
 		},
 		testCLIFlags{
 			Name: "subommand",
@@ -326,11 +332,11 @@ func TestCLIFlags(t *testing.T) {
 				Variables: []Variable{
 					&StringVariable{
 						Name:        "test-value",
-						Destination: &testString,
+						Destination: &config.TestString,
 					},
 					&BoolVariable{
 						Name:        "test-bool",
-						Destination: &testBool,
+						Destination: &config.TestBool,
 					},
 				},
 				Subcommands: []*Command{
@@ -339,24 +345,46 @@ func TestCLIFlags(t *testing.T) {
 						Variables: []Variable{
 							&StringVariable{
 								Name:        "test-value",
-								Destination: &testString,
+								Destination: &config.TestString,
 							},
 							&BoolVariable{
 								Name:        "test-bool",
-								Destination: &testBool,
+								Destination: &config.TestBool,
 							},
 							&Float64Variable{
 								Name:        "test-float-64",
-								Destination: &testFloat64,
+								Destination: &config.TestFloat64,
+							},
+							&IntVariable{
+								Name:        "test-int",
+								Destination: &config.TestInt,
+							},
+
+							&Int64Variable{
+								Name:        "test-int-64",
+								Destination: &config.TestInt64,
 							},
 						},
 					},
 				},
 			},
-			StrValue:     "used",
-			BoolValue:    true,
-			Float64Value: float64(2.5),
-			Args:         []string{"path_to_exec", "--test-value=ignored", "--test-bool=true", "nested", "--test-value=used", "--test-float-64=2.5"},
+			Expected: &fullTestConfig{
+				TestString:  "used",
+				TestBool:    true,
+				TestFloat64: float64(2.5),
+				TestInt:     5,
+				TestInt64:   int64(100),
+			},
+			Args: []string{
+				"path_to_exec",
+				"--test-value=ignored",
+				"--test-bool=true",
+				"nested",
+				"--test-value=used",
+				"--test-float-64=2.5",
+				"--test-int=5",
+				"--test-int-64=100",
+			},
 		},
 	}
 
@@ -367,11 +395,7 @@ func TestCLIFlags(t *testing.T) {
 			app.Silent = true
 			app.Run(test.Args)
 
-			assert.Equal(t, test.StrValue, testString, "test string should be the same.")
-			assert.Equal(t, test.BoolValue, testBool, "test bool should be the same.")
-			if test.Float64Value != float64(0) {
-				assert.Equal(t, test.Float64Value, testFloat64, "test float64 should be the same.")
-			}
+			assert.Equal(t, test.Expected, config, "test config values should be equal.")
 		})
 	}
 }
@@ -381,14 +405,6 @@ type testTomlConfig struct {
 	Command    *Command
 	ConfigPath string
 	Expected   *fullTestConfig
-}
-
-type fullTestConfig struct {
-	TestString  string
-	TestFloat64 float64
-	TestBool    bool
-	TestInt     int
-	TestInt64   int64
 }
 
 func TestTomlConfig(t *testing.T) {
