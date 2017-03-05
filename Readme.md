@@ -33,7 +33,7 @@ Left to do:
 
 #### Types of Outputs
 ##### Missing Required Variables:
-Unpuzzled will parse all the inputs, and then list all of the missing required variables before exiting the program. This includes required variables across Parent / Subcommands.
+Unpuzzled will parse all the inputs, and then list all of the missing required variables before exiting the program. This includes required variables in parent commands.
 ![required variables](https://github.com/timjchin/unpuzzled/raw/master/fixtures/missing_required_variables.jpg "Logo Title Text 1")
 
 
