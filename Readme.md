@@ -31,5 +31,44 @@ Clarity prevents confusion.
 Left to do:
 * More variable types
 
+
+# How to use JSON / Toml configs:
+TOML:
+```
+app := unpuzzled.NewApp()
+app.Command = &unpuzzled.Command{
+    Name: "main",
+    Variables: []unpuzzled.Variable{
+        &unpuzzled.ConfigVariable{
+            StringVariable: &unpuzzled.StringVariable{
+                Name: "config"
+                Description: "Main configuration, use with `go run main.go --config=path_to_file.toml`",
+                Type: unpuzzled.TomlConfig,
+            },
+        },
+    },
+}
+```
+JSON Config Example:
+Usage:
+` go run main.go --config=path_to_file.json`
+
+```
+app := unpuzzled.NewApp()
+app.Command = &unpuzzled.Command{
+    Name: "main",
+    Variables: []unpuzzled.Variable{
+        &unpuzzled.ConfigVariable{
+            StringVariable: &unpuzzled.StringVariable{
+                Name: "config"
+                Description: "Main configuration flag, use with `go run main.go --config=path_to_file.json`",
+                Type: unpuzzled.JsonConfig,
+            },
+        },
+    },
+}
+```
+
+
 Status:
 Alpha.
