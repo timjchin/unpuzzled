@@ -161,7 +161,7 @@ func (a *App) PrintMissingRequiredVariables() {
 {{ range $k, $variables := . }}
 {{ blue "Command" }} : {{ $k }}
 {{ range $i, $var := $variables -}}
-{{ green $var.GetName }} : {{ printf "%v" $var.Description }}
+{{ green "--"}}{{ green $var.GetName }} : {{ printf "%v" $var.Description }}
 {{ end -}}
 {{ end }}
 `)

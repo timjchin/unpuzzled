@@ -31,9 +31,14 @@ Clarity prevents confusion.
 Left to do:
 * More variable types
 
+#### Types of Outputs
+##### Missing Required Variables:
+Unpuzzled will parse all the inputs, and then list all of the missing required variables before exiting the program. This includes required variables across Parent / Subcommands.
+![required variables](https://github.com/timjchin/unpuzzled/raw/master/fixtures/missing_required_variables.jpg "Logo Title Text 1")
 
-# How to use JSON / Toml configs:
-TOML:
+
+#### How to use JSON / Toml configs:
+##### TOML:
 ```
 app := unpuzzled.NewApp()
 app.Command = &unpuzzled.Command{
@@ -49,10 +54,7 @@ app.Command = &unpuzzled.Command{
     },
 }
 ```
-JSON Config Example:
-Usage:
-` go run main.go --config=path_to_file.json`
-
+##### JSON Config Example:
 ```
 app := unpuzzled.NewApp()
 app.Command = &unpuzzled.Command{
@@ -68,7 +70,6 @@ app.Command = &unpuzzled.Command{
     },
 }
 ```
-
 
 Status:
 Alpha.
