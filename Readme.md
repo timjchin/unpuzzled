@@ -43,7 +43,7 @@ Set Variables can be shown in two outputs.
 
 ###### Table Option
 A table option can be chosen by setting `OverridesOutputIntTable` to `true`:
-```
+```go
 app := unpuzzled.NewApp()
 app.OverridesOutputInTable = true
 ```
@@ -56,7 +56,7 @@ Unpuzzled will warn you that these values have been overwritten.
 
 In the example below, the variables `example-a` and `example-b` both point to `testString`. If both are set, `example-b` will override `example-a`, because it is later in the Variables array. 
 
-```
+```go
 var testString string
 app := unpuzzled.NewApp()
 app.Command = &unpuzzled.Command{
@@ -83,7 +83,7 @@ app.Run(os.Args)
 
 #### How to use JSON / Toml configs:
 ##### TOML:
-```
+```go
 app := unpuzzled.NewApp()
 app.Command = &unpuzzled.Command{
     Name: "main",
@@ -99,7 +99,7 @@ app.Command = &unpuzzled.Command{
 }
 ```
 ##### JSON Config Example:
-```
+```go
 app := unpuzzled.NewApp()
 app.Command = &unpuzzled.Command{
     Name: "main",
@@ -114,6 +114,3 @@ app.Command = &unpuzzled.Command{
     },
 }
 ```
-
-Status:
-Alpha.
