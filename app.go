@@ -11,25 +11,25 @@ import (
 )
 
 type App struct {
-	Name         string
-	Usage        string
-	Description  string
-	Copyright    string
-	ParsingOrder []ParsingType
-	Command      *Command
-	Authors      []Author
-	HelpCommands map[string]bool
-	Action       func()
-	// All output will not include color
-	RemoveColor bool
-	// Turn off all output
-	Silent                   bool
+	Name                     string
+	Usage                    string
+	Description              string
+	Copyright                string
+	ParsingOrder             []ParsingType
+	Command                  *Command
+	Authors                  []Author
+	HelpCommands             map[string]bool
+	Action                   func()
 	args                     []string
 	activeCommands           []*Command
 	missingRequiredVariables map[string][]Variable
 	settingsMap              *mappedSettings
 	HelpTextVariablesInTable bool
 	OverridesOutputInTable   bool
+	// All output will not include color
+	RemoveColor bool
+	// Turn off all output
+	Silent bool
 }
 
 type ParsingType int
