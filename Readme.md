@@ -13,7 +13,7 @@ Clarity prevents confusion.
     * JSON files
     * TOML files
     * CLI Flags
-* Ability to choose the order of precendece (ex. cli flags > JSON > TOML > ENV)
+* Ability to choose the order of variable overrides (ex. cli flags > JSON > TOML > ENV)
 * Main Command and Subcommands
 * Defaults to verbose output out of the box, with the ability to turn it off. (app.Silent = true`)
 * Warnings on overrides 
