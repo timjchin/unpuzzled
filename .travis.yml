@@ -16,7 +16,7 @@ install:
   - go get github.com/client9/misspell/cmd/misspell
 
 script:
-  - diff <(echo -n) <(gofmt -s -d .)
+  - diff <(echo -n) <(gofmt -d .)
   - ineffassign .
   - go test -race ./...
   - aligncheck .
