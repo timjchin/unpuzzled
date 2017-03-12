@@ -1,4 +1,4 @@
-# Unpuzzled
+# Unpuzzled [![Build Status](https://travis-ci.org/timjchin/unpuzzled.svg?branch=master)](https://travis-ci.org/timjchin/unpuzzled)
 A user-first CLI library. 
 
 With the ability to import variables from many different sources: command line flags, environment variables, and configuration variables, it's often not clear what values are set, or why.
