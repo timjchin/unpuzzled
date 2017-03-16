@@ -4,6 +4,7 @@
         "test-string": "hi",
         "test-bool": true,
         "test-int": 5,
-        "test-int-64": 100
+        "test-int-64": 100,
+        "test-duration": "1h"
     }
 }

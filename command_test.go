@@ -3,6 +3,7 @@ package unpuzzled
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"os"
 
@@ -10,11 +11,12 @@ import (
 )
 
 type fullTestConfig struct {
-	TestString  string
-	TestFloat64 float64
-	TestBool    bool
-	TestInt     int
-	TestInt64   int64
+	TestString   string
+	TestFloat64  float64
+	TestBool     bool
+	TestInt      int
+	TestInt64    int64
+	TestDuration time.Duration
 }
 
 type argumentAssignemntTest struct {
@@ -225,17 +227,23 @@ func TestEnvironmentVariables(t *testing.T) {
 						Name:        "test-float-64",
 						Destination: &config.TestFloat64,
 					},
+					&DurationVariable{
+						Name:        "test-duration",
+						Destination: &config.TestDuration,
+					},
 				},
 			},
 			Expected: &fullTestConfig{
-				TestString:  "a",
-				TestBool:    true,
-				TestFloat64: float64(1.5),
+				TestString:   "a",
+				TestBool:     true,
+				TestFloat64:  float64(1.5),
+				TestDuration: time.Minute,
 			},
 			EnvVars: []envVar{
 				envVar{"TEST_VALUE", "a"},
 				envVar{"TEST_BOOL", "true"},
 				envVar{"TEST_FLOAT_64", "1.5"},
+				envVar{"TEST_DURATION", "1m"},
 			},
 		},
 		testEnvironmentVariables{
@@ -263,14 +271,19 @@ func TestEnvironmentVariables(t *testing.T) {
 						Name:        "test-int",
 						Destination: &config.TestInt,
 					},
+					&DurationVariable{
+						Name:        "test-duration",
+						Destination: &config.TestDuration,
+					},
 				},
 			},
 			Expected: &fullTestConfig{
-				TestString:  "b",
-				TestBool:    false,
-				TestFloat64: float64(2.5),
-				TestInt64:   int64(100),
-				TestInt:     10,
+				TestString:   "b",
+				TestBool:     false,
+				TestFloat64:  float64(2.5),
+				TestInt64:    int64(100),
+				TestInt:      10,
+				TestDuration: time.Second * time.Duration(15),
 			},
 			EnvVars: []envVar{
 				envVar{"TEST_VALUE", "b"},
@@ -278,6 +291,7 @@ func TestEnvironmentVariables(t *testing.T) {
 				envVar{"TEST_FLOAT_64", "2.5"},
 				envVar{"TEST_INT_64", "100"},
 				envVar{"TEST_INT", "10"},
+				envVar{"TEST_DURATION", "15s"},
 			},
 		},
 	}
@@ -330,14 +344,25 @@ func TestCLIFlags(t *testing.T) {
 						Name:        "test-float-64",
 						Destination: &config.TestFloat64,
 					},
+					&DurationVariable{
+						Name:        "test-duration",
+						Destination: &config.TestDuration,
+					},
 				},
 			},
 			Expected: &fullTestConfig{
-				TestString:  "random",
-				TestBool:    true,
-				TestFloat64: float64(1.5),
+				TestString:   "random",
+				TestBool:     true,
+				TestFloat64:  float64(1.5),
+				TestDuration: time.Second * time.Duration(12),
 			},
-			Args: []string{"path_to_exec", "--test-value=random", "--test-bool=true", "--test-float-64=1.5"},
+			Args: []string{
+				"path_to_exec",
+				"--test-value=random",
+				"--test-bool=true",
+				"--test-float-64=1.5",
+				"--test-duration=12s",
+			},
 		},
 		testCLIFlags{
 			Name: "subommand",
@@ -373,7 +398,10 @@ func TestCLIFlags(t *testing.T) {
 								Name:        "test-int",
 								Destination: &config.TestInt,
 							},
-
+							&DurationVariable{
+								Name:        "test-duration",
+								Destination: &config.TestDuration,
+							},
 							&Int64Variable{
 								Name:        "test-int-64",
 								Destination: &config.TestInt64,
@@ -383,11 +411,12 @@ func TestCLIFlags(t *testing.T) {
 				},
 			},
 			Expected: &fullTestConfig{
-				TestString:  "used",
-				TestBool:    true,
-				TestFloat64: float64(2.5),
-				TestInt:     5,
-				TestInt64:   int64(100),
+				TestString:   "used",
+				TestBool:     true,
+				TestFloat64:  float64(2.5),
+				TestInt:      5,
+				TestInt64:    int64(100),
+				TestDuration: time.Hour,
 			},
 			Args: []string{
 				"path_to_exec",
@@ -398,6 +427,7 @@ func TestCLIFlags(t *testing.T) {
 				"--test-float-64=2.5",
 				"--test-int=5",
 				"--test-int-64=100",
+				"--test-duration=1h",
 			},
 		},
 	}
@@ -464,14 +494,19 @@ func TestTomlConfig(t *testing.T) {
 						},
 						Type: TomlConfig,
 					},
+					&DurationVariable{
+						Name:        "test-duration",
+						Destination: &config.TestDuration,
+					},
 				},
 			},
 			Expected: &fullTestConfig{
-				TestFloat64: float64(1.2345),
-				TestString:  "hi",
-				TestBool:    true,
-				TestInt:     5,
-				TestInt64:   int64(100),
+				TestFloat64:  float64(1.2345),
+				TestString:   "hi",
+				TestBool:     true,
+				TestInt:      5,
+				TestInt64:    int64(100),
+				TestDuration: time.Duration(15) * time.Second,
 			},
 		},
 	}
@@ -528,6 +563,10 @@ func TestJsonConfig(t *testing.T) {
 						Description: "Testing an int64 variable.",
 						Destination: &config.TestInt64,
 					},
+					&DurationVariable{
+						Name:        "test-duration",
+						Destination: &config.TestDuration,
+					},
 					&ConfigVariable{
 						StringVariable: &StringVariable{
 							Required:    true,
@@ -539,11 +578,12 @@ func TestJsonConfig(t *testing.T) {
 				},
 			},
 			Expected: &fullTestConfig{
-				TestFloat64: float64(1.2345),
-				TestString:  "hi",
-				TestBool:    true,
-				TestInt:     5,
-				TestInt64:   int64(100),
+				TestFloat64:  float64(1.2345),
+				TestString:   "hi",
+				TestBool:     true,
+				TestInt:      5,
+				TestInt64:    int64(100),
+				TestDuration: time.Hour,
 			},
 		},
 	}
