@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/timjchin/unpuzzled"
 )
 
 type Config struct {
-	OtherString   string
-	CustomString  string
-	ThirdString   string
-	CustomBool    bool
-	CustomFloat64 float64
-	Int64Val      int64
+	OtherString    string
+	CustomString   string
+	ThirdString    string
+	CustomBool     bool
+	CustomFloat64  float64
+	CustomDuration time.Duration
+	Int64Val       int64
 }
 
 func main() {
@@ -27,6 +29,7 @@ func main() {
 			&unpuzzled.StringVariable{
 				Name:        "random-value",
 				Description: "Here's a random string",
+				Default:     "random",
 				Destination: &config.OtherString,
 			},
 			&unpuzzled.BoolVariable{
@@ -53,6 +56,11 @@ func main() {
 					Description: "An example required configuration variable.",
 				},
 				Type: unpuzzled.TomlConfig,
+			},
+			&unpuzzled.DurationVariable{
+				Name:        "test-duration",
+				Description: "An example time.Duration variable.",
+				Destination: &config.CustomDuration,
 			},
 		},
 		Action: func() {
