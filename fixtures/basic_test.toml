@@ -4,3 +4,4 @@ teststring="hi"
 testbool=true
 testint=5
 testint64=100
+test-duration="15s"
