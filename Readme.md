@@ -1,4 +1,4 @@
-# Unpuzzled [![Build Status](https://travis-ci.org/timjchin/unpuzzled.svg?branch=master)](https://travis-ci.org/timjchin/unpuzzled)
+# Unpuzzled [![GoDoc](https://godoc.org/github.com/timjchin/unpuzzled?status.svg)](https://godoc.org/github.com/timjchin/unpuzzled) [![Build Status](https://travis-ci.org/timjchin/unpuzzled.svg?branch=master)](https://travis-ci.org/timjchin/unpuzzled)
 A user-first CLI library. 
 
 With the ability to import variables from many different sources: command line flags, environment variables, and configuration variables, it's often not clear what values are set, or why.
@@ -78,7 +78,7 @@ app.Run(os.Args)
 ```
 ![overwritten pointer](https://github.com/timjchin/unpuzzled/raw/master/fixtures/overwritten_pointer.png "Example Output for overwritten variables.")
 
-(Full example in [example/example_ovewritten_pointer.go](https://github.com/timjchin/unpuzzled/blob/master/example/example_overwritten_pointer.go))
+(Full example in [examples/overwritten_pointer](https://github.com/timjchin/unpuzzled/tree/master/examples/overwritten_pointer))
 
 
 #### How to use JSON / Toml configs:
