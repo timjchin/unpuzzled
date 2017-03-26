@@ -11,7 +11,6 @@ import (
 )
 
 type App struct {
-	Action                   func()
 	// Used to name the App in the help text.
 	Name string
 	// The "Usage" section in the help text.

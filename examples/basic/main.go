@@ -118,11 +118,6 @@ func main() {
 		},
 	}
 
-	app.Action = func() {
-		fmt.Println("parsed: customstring", config.CustomString)
-		fmt.Println("parsed: custombool", config.CustomBool)
-	}
-
 	app.Run(os.Args)
 
 }
