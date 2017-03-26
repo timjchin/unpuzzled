@@ -11,25 +11,33 @@ import (
 )
 
 type App struct {
-	Name                     string
-	Usage                    string
-	Description              string
-	Copyright                string
-	ParsingOrder             []ParsingType
-	Command                  *Command
-	Authors                  []Author
-	HelpCommands             map[string]bool
-	Action                   func()
+	// Used to name the App in the help text.
+	Name string
+	// The "Usage" section in the help text.
+	Usage string
+	// The text used for the copyright section in the help text.
+	Copyright string
+	// The order in which variable sources will be parsed, values later in the array will be parsed afterwards, overwriting earlier sources.
+	// Default order is: CLI Flag > Toml Config > JSON Config > Environment
+	ParsingOrder []ParsingType
+	// Main command attached to the app.
+	Command *Command
+	// List of authors used in the help text.
+	Authors []Author
+	// The keys in this map are used to check for help values, defaults are "help", "-h", and "--help"
+	HelpCommands map[string]bool
+	// If help text variables will be displayed in a table. Defaults to true.
+	HelpTextVariablesInTable bool
+	// If overridden variables will be displayed in a table. Defaults to false.
+	OverridesOutputInTable bool
+	// All output will not include color
+	RemoveColor bool
+	// Turn off all output
+	Silent                   bool
 	args                     []string
 	activeCommands           []*Command
 	missingRequiredVariables map[string][]Variable
 	settingsMap              *mappedSettings
-	HelpTextVariablesInTable bool
-	OverridesOutputInTable   bool
-	// All output will not include color
-	RemoveColor bool
-	// Turn off all output
-	Silent bool
 }
 
 type ParsingType int
@@ -214,10 +222,13 @@ func (a *App) PrintHelpCommand(command *Command) {
 		return buffer.String()
 	}
 	t.Funcs(funcMap)
-	t.Parse(`{{ bold (green "NAME:") }} 
+	t.Parse(`{{ bold (green "APP:") }} 
+{{ .App.Name }}
+
+{{ bold (green "COMMAND:") }} 
 {{ .HelpCommand.Name }}
 
-{{ if gt (len .HelpCommand.Usage) 0 }}{{ bold (green "USAGE:") }}
+{{ if gt (len .HelpCommand.Usage) 0 }}{{ bold (green "COMMAND USAGE:") }}
 {{ .HelpCommand.Usage }}
 {{ end }}
 {{ bold (green "AVAILABLE SUBCOMMANDS:")}}
@@ -247,7 +258,14 @@ func (a *App) PrintHelpCommand(command *Command) {
 {{ blue "--"}}{{ blue $v.GetName }} {{ if $v.IsRequired }}({{ red "Required" }}) {{ end }}{{ noEscape $v.GetDescription }}
 {{ end -}}
 {{ end -}}
-`)
+{{ if gt (len .App.Copyright) 0 }}{{ bold (green "Copyright:") }}
+{{ .App.Copyright}}
+{{ end }}
+{{ if gt (len .App.Authors) 0 }}{{ bold (green "Authors:") }}
+{{ range $i, $author := .App.Authors -}}
+{{ if gt (len $author.Name) 0 }}{{ $author.Name }}{{ end }} ({{ if gt (len $author.Email) 0 }}{{ $author.Email }}{{ end }})
+{{ end -}}
+{{ end }}`)
 
 	parsingOrder := []string{}
 	for _, val := range a.ParsingOrder {

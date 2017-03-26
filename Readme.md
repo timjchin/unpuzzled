@@ -81,6 +81,11 @@ app.Run(os.Args)
 (Full example in [examples/overwritten_pointer](https://github.com/timjchin/unpuzzled/tree/master/examples/overwritten_pointer))
 
 
+#### Help Text:
+Help text is provided whenever the app is run with the values provided in the `app.HelpCommands`. The defaults are: `-h`, `--help` or `help`. The help text content only includes the content for the current command selected.
+
+![help text](https://github.com/timjchin/unpuzzled/raw/master/fixtures/help_text.png "Example Output for help text.")
+
 #### How to use JSON / Toml configs:
 ##### TOML:
 ```go
