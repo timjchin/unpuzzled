@@ -22,6 +22,17 @@ func main() {
 	app := unpuzzled.NewApp()
 	config := &Config{}
 	app.OverridesOutputInTable = true
+	app.Copyright = "Fake Co. 2017"
+	app.Authors = []unpuzzled.Author{
+		unpuzzled.Author{
+			Name:  "Tim",
+			Email: "email@email.com",
+		},
+		unpuzzled.Author{
+			Name:  "Another author",
+			Email: "email@email.com",
+		},
+	}
 	app.Command = &unpuzzled.Command{
 		Name:  "main",
 		Usage: "An example application that prints values.",
