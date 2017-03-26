@@ -84,7 +84,7 @@ app.Run(os.Args)
 #### Help Text:
 Help text is provided whenever the app is run with the values provided in the `app.HelpCommands`. The defaults are: `-h`, `--help` or `help`. The help text content only includes the content for the current command selected.
 
-![help text](https://github.com/timjchin/unpuzzled/raw/master/fixtures/help_text.png "Example Output for help text.")
+![help text](https://github.com/timjchin/unpuzzled/raw/master/fixtures/help_text.jpg "Example Output for help text.")
 
 #### How to use JSON / Toml configs:
 ##### TOML:
