@@ -28,7 +28,7 @@ type App struct {
 	HelpCommands map[string]bool
 	// If help text variables will be displayed in a table. Defaults to true.
 	HelpTextVariablesInTable bool
-	// If overriden variables will be displayed in a table. Defaults to false.
+	// If overridden variables will be displayed in a table. Defaults to false.
 	OverridesOutputInTable bool
 	// All output will not include color
 	RemoveColor bool
