@@ -522,14 +522,16 @@ func TestTomlConfig(t *testing.T) {
 }
 
 type testJsonConfig struct {
-	Name       string
-	Command    *Command
-	ConfigPath string
-	Expected   *fullTestConfig
+	Name           string
+	Command        *Command
+	ConfigPath     string
+	Expected       *fullTestConfig
+	ExpectedNested *fullTestConfig
 }
 
 func TestJsonConfig(t *testing.T) {
 	config := &fullTestConfig{}
+	nestedConfig := &fullTestConfig{}
 
 	tests := []testJsonConfig{
 		testJsonConfig{
@@ -576,8 +578,52 @@ func TestJsonConfig(t *testing.T) {
 						Type: JsonConfig,
 					},
 				},
+				Subcommands: []*Command{
+					&Command{
+						Name: "nested",
+						Variables: []Variable{
+							&Float64Variable{
+								Name:        "test-float",
+								Description: "Setting a float64 variable.",
+								Destination: &nestedConfig.TestFloat64,
+							},
+							&StringVariable{
+								Name:        "test-string",
+								Description: "Setting a string variable.",
+								Destination: &nestedConfig.TestString,
+							},
+							&BoolVariable{
+								Name:        "test-bool",
+								Description: "Setting a bool variable.",
+								Destination: &nestedConfig.TestBool,
+							},
+							&IntVariable{
+								Name:        "test-int",
+								Description: "Setting an integer variable.",
+								Destination: &nestedConfig.TestInt,
+							},
+							&Int64Variable{
+								Name:        "test-int-64",
+								Description: "Testing an int64 variable.",
+								Destination: &nestedConfig.TestInt64,
+							},
+							&DurationVariable{
+								Name:        "test-duration",
+								Destination: &nestedConfig.TestDuration,
+							},
+						},
+					},
+				},
 			},
 			Expected: &fullTestConfig{
+				TestFloat64:  float64(1.2345),
+				TestString:   "hi",
+				TestBool:     true,
+				TestInt:      5,
+				TestInt64:    int64(100),
+				TestDuration: time.Hour,
+			},
+			ExpectedNested: &fullTestConfig{
 				TestFloat64:  float64(1.2345),
 				TestString:   "hi",
 				TestBool:     true,
@@ -592,8 +638,9 @@ func TestJsonConfig(t *testing.T) {
 			app := NewApp()
 			app.Command = test.Command
 			app.Silent = true
-			app.Run([]string{"path_to_exec", fmt.Sprintf("--config=%s", test.ConfigPath)})
+			app.Run([]string{"path_to_exec", fmt.Sprintf("--config=%s", test.ConfigPath), "nested"})
 			assert.Equal(t, test.Expected, config, "config values should be the same.")
+			assert.Equal(t, test.ExpectedNested, nestedConfig, "config values should be the same.")
 		})
 	}
 }
