@@ -84,7 +84,7 @@ func main() {
 				Variables: []unpuzzled.Variable{
 					&unpuzzled.StringVariable{
 						Name:        "nested-string",
-						Description: "An example required varible for a nested command.",
+						Description: "An example required variable for a nested command.",
 						Destination: &config.ThirdString,
 						Required:    true,
 					},
