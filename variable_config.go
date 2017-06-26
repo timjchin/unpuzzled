@@ -79,7 +79,7 @@ func (c *ConfigVariable) getConfigValue(path string) (interface{}, error) {
 }
 
 type tomlConfig struct {
-	tree *toml.TomlTree
+	tree *toml.Tree
 }
 
 func (t *tomlConfig) GetByVariable(path string) (interface{}, error) {
